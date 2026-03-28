@@ -103,21 +103,33 @@ cp -R "$APP_PATH" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 ok "Staged"
 
-# ── Create writable DMG ───────────────────────────────────────────────────────
+# ── Create DMG ────────────────────────────────────────────────────────────────
 step "Creating DMG..."
-hdiutil create \
-    -volname  "$VOL_NAME" \
-    -srcfolder "$STAGING" \
-    -ov \
-    -format    UDRW \
-    -fs        HFS+ \
-    "$DMG_TEMP" > /dev/null
 
-# Mount it to set window properties via AppleScript
-MOUNT=$(hdiutil attach "$DMG_TEMP" -readwrite -nobrowse | grep "/Volumes/" | awk '{print $NF}')
+if [ -n "${CI:-}" ]; then
+    # ── CI: create compressed DMG directly (no Finder/AppleScript on headless runner)
+    hdiutil create \
+        -volname   "$VOL_NAME" \
+        -srcfolder "$STAGING" \
+        -ov \
+        -format    UDZO \
+        -imagekey  zlib-level=9 \
+        -fs        HFS+ \
+        "$DMG_FINAL" > /dev/null
+else
+    # ── Local: create writable DMG, set pretty Finder window layout, then compress
+    hdiutil create \
+        -volname   "$VOL_NAME" \
+        -srcfolder "$STAGING" \
+        -ov \
+        -format    UDRW \
+        -fs        HFS+ \
+        "$DMG_TEMP" > /dev/null
 
-# Set Finder window size and icon layout
-osascript <<APPLESCRIPT > /dev/null 2>&1 || true
+    # Mount — use tab-field split so volume names with spaces work correctly
+    MOUNT=$(hdiutil attach "$DMG_TEMP" -readwrite -nobrowse | awk -F'\t' '/\/Volumes\//{gsub(/^[[:space:]]+/,"",$NF); print $NF}')
+
+    osascript <<APPLESCRIPT > /dev/null 2>&1 || true
 tell application "Finder"
   tell disk "$VOL_NAME"
     open
@@ -139,15 +151,14 @@ tell application "Finder"
 end tell
 APPLESCRIPT
 
-hdiutil detach "$MOUNT" -quiet
+    hdiutil detach "$MOUNT" -quiet
 
-# ── Convert to compressed read-only DMG ──────────────────────────────────────
-step "Compressing final DMG..."
-hdiutil convert "$DMG_TEMP" \
-    -format UDZO \
-    -imagekey zlib-level=9 \
-    -o "$DMG_FINAL" > /dev/null
-rm -f "$DMG_TEMP"
+    hdiutil convert "$DMG_TEMP" \
+        -format UDZO \
+        -imagekey zlib-level=9 \
+        -o "$DMG_FINAL" > /dev/null
+    rm -f "$DMG_TEMP"
+fi
 ok "Compressed"
 
 # ── Summary ───────────────────────────────────────────────────────────────────
