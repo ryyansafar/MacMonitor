@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Combine
 
 // Copyright (c) 2025-2026 MacMonitor Contributors. MIT License.
