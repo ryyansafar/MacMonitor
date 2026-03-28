@@ -26,12 +26,12 @@ Real-time CPU, GPU, memory, battery, power rails, network, and disk — all in a
   <tr>
     <td><img src="assets/screenshots/dashboard.png" alt="Full dashboard" width="320"/></td>
     <td><img src="assets/screenshots/menubar.png" alt="Menu bar indicator" width="320"/></td>
-    <td><img src="assets/screenshots/widget.png" alt="Desktop widget" width="320"/></td>
+    <td><img src="assets/screenshots/battery.png" alt="Battery section" width="320"/></td>
   </tr>
   <tr>
     <td align="center"><sub>Full dashboard</sub></td>
     <td align="center"><sub>Menu bar indicator</sub></td>
-    <td align="center"><sub>Desktop widget</sub></td>
+    <td align="center"><sub>Battery &amp; power detail</sub></td>
   </tr>
 </table>
 
