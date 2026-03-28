@@ -7,23 +7,23 @@ on:
       - "v[0-9]*"
 
 jobs:
-  build-dmg:
-    name: Build & publish DMG
-    runs-on: macos-latest          # Apple Silicon runners on GitHub Actions
+  build-and-release:
+    name: Build DMG · Publish Release · Update Homebrew
+    runs-on: macos-latest
 
     permissions:
-      contents: write              # needed to create the release and upload assets
+      contents: write
 
     steps:
       # ── 1. Checkout ────────────────────────────────────────────────────────────
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # ── 2. Show available Xcode versions ──────────────────────────────────────
+      # ── 2. Xcode version ───────────────────────────────────────────────────────
       - name: Xcode version
         run: xcodebuild -version
 
-      # ── 3. Install mactop ─────────────────────────────────────────────────────
+      # ── 3. Install mactop ──────────────────────────────────────────────────────
       - name: Install mactop
         run: brew install mactop
 
@@ -32,13 +32,13 @@ jobs:
         env:
           CI: true
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"   # strip leading "v"
+          VERSION="${GITHUB_REF_NAME#v}"
           export MACMONITOR_VERSION="$VERSION"
           chmod +x scripts/build-dmg.sh
           ./scripts/build-dmg.sh
 
-      # ── 4. Publish GitHub Release ──────────────────────────────────────────────
-      - name: Create GitHub Release
+      # ── 5. Publish GitHub Release ──────────────────────────────────────────────
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -47,3 +47,37 @@ jobs:
             --title "MacMonitor $GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag
+
+      # ── 6. Compute DMG SHA256 ─────────────────────────────────────────────────
+      - name: Compute SHA256
+        id: sha
+        run: |
+          SHA=$(shasum -a 256 dist/MacMonitor-*.dmg | awk '{print $1}')
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "sha256=$SHA"   >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # ── 7. Update Homebrew tap ────────────────────────────────────────────────
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: ryyansafar/homebrew-macmonitor
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update Cask formula
+        run: |
+          VERSION="${{ steps.sha.outputs.version }}"
+          SHA="${{ steps.sha.outputs.sha256 }}"
+          sed -i "s/  version \".*\"/  version \"${VERSION}\"/"  tap/Casks/macmonitor.rb
+          sed -i "s/  sha256 \".*\"/  sha256 \"${SHA}\"/"        tap/Casks/macmonitor.rb
+
+      - name: Push updated formula
+        run: |
+          cd tap
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/macmonitor.rb
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "chore: bump macmonitor to v${{ steps.sha.outputs.version }}"
+          git push
