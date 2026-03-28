@@ -69,8 +69,8 @@ jobs:
         run: |
           VERSION="${{ steps.sha.outputs.version }}"
           SHA="${{ steps.sha.outputs.sha256 }}"
-          sed -i "s/  version \".*\"/  version \"${VERSION}\"/"  tap/Casks/macmonitor.rb
-          sed -i "s/  sha256 \".*\"/  sha256 \"${SHA}\"/"        tap/Casks/macmonitor.rb
+          sed -i '' "s/  version \".*\"/  version \"${VERSION}\"/"  tap/Casks/macmonitor.rb
+          sed -i '' "s/  sha256 \".*\"/  sha256 \"${SHA}\"/"        tap/Casks/macmonitor.rb
 
       - name: Push updated formula
         run: |
