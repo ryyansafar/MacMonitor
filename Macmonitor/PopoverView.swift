@@ -10,6 +10,9 @@ struct PopoverView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
                 Header(model: model, showSettings: $showSettings)
+                if model.mactopMissing {
+                    MactopMissingBanner()
+                }
                 sep
                 CPUSection(model: model)
                 sep
@@ -40,6 +43,31 @@ struct PopoverView: View {
             .fill(Color.white.opacity(0.06))
             .frame(height: 1)
             .padding(.horizontal, 14)
+    }
+}
+
+// MARK: - mactop missing banner
+
+private struct MactopMissingBanner: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(Color(hex: "FF9F0A"))
+                .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("mactop not found")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(hex: "FF9F0A"))
+                Text("Run Install.command from the DMG to enable GPU, temps, and power data.")
+                    .font(.system(size: 10))
+                    .foregroundColor(Color(hex: "888899"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color(hex: "FF9F0A").opacity(0.08))
     }
 }
 

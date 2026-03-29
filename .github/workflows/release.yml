@@ -17,7 +17,7 @@ jobs:
     steps:
       # ── 1. Checkout ────────────────────────────────────────────────────────────
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ── 2. Xcode version ───────────────────────────────────────────────────────
       - name: Xcode version
@@ -59,7 +59,7 @@ jobs:
 
       # ── 7. Update Homebrew tap ────────────────────────────────────────────────
       - name: Checkout Homebrew tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ryyansafar/homebrew-macmonitor
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}

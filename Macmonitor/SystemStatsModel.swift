@@ -78,7 +78,8 @@ class SystemStatsModel: ObservableObject {
     @Published var gpuCoreCount: Int    = 0
 
     @Published var topProcs: [ProcInfo] = []
-    @Published var mactopReady = false
+    @Published var mactopReady   = false
+    @Published var mactopMissing = false
 
     // Private
     private var prevCPUTicks: [[UInt32]] = []
@@ -86,6 +87,11 @@ class SystemStatsModel: ObservableObject {
     private var prevNetOut:   Int64 = 0
     private var prevTickTime: Date  = Date()
     private var timer: Timer?
+
+    private static let mactopPath: String = {
+        let candidates = ["/opt/homebrew/bin/mactop", "/usr/local/bin/mactop"]
+        return candidates.first { FileManager.default.fileExists(atPath: $0) } ?? candidates[0]
+    }()
 
     // MARK: - Start
 
@@ -279,10 +285,17 @@ class SystemStatsModel: ObservableObject {
     private func fetchMactop() {
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
+
+            let mactop = SystemStatsModel.mactopPath
+            guard FileManager.default.fileExists(atPath: mactop) else {
+                DispatchQueue.main.async { self.mactopMissing = true }
+                return
+            }
+
             let task = Process()
             task.executableURL = URL(fileURLWithPath: "/usr/bin/sudo")
-            task.arguments = ["/opt/homebrew/bin/mactop",
-                              "--headless", "--count", "1", "-i", "600", "--format", "json"]
+            task.arguments = [mactop,
+                              "--headless", "--count", "1", "-i", "2000", "--format", "json"]
             let pipe = Pipe()
             task.standardOutput = pipe
             task.standardError  = Pipe()
