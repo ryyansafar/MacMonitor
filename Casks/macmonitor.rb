@@ -9,7 +9,7 @@
 #   brew upgrade --cask macmonitor
 
 cask "macmonitor" do
-  version "1.1.0"
+  version "1.1.1"
   sha256 "PLACEHOLDER_SHA256_UPDATED_AUTOMATICALLY_BY_CI"
 
   url "https://github.com/ryyansafar/MacMonitor/releases/download/v#{version}/MacMonitor-#{version}.dmg"
