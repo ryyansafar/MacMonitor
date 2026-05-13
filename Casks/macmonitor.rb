@@ -10,7 +10,7 @@
 
 cask "macmonitor" do
   version "2.0.0"
-  sha256 "PLACEHOLDER_SHA256_UPDATED_AUTOMATICALLY_BY_CI"
+  sha256 "3f11958ea2c8fa7f8134237df281a366de8c04990b78420a8f030fc50f144fd0"
 
   url "https://github.com/ryyansafar/MacMonitor/releases/download/v#{version}/MacMonitor-#{version}.dmg"
   name "MacMonitor"
@@ -33,7 +33,7 @@ cask "macmonitor" do
     unless File.executable?(helper_path)
       system_command "/bin/mkdir", args: ["-p", helper_dir], sudo: true
       system_command "/bin/cp",
-                     args: ["#{staged_path}/MacMonitor.app/Contents/MacOS/macmonitor-helper", helper_path],
+                     args: ["#{staged_path}/Macmonitor.app/Contents/MacOS/macmonitor-helper", helper_path],
                      sudo: true
       system_command "/bin/chmod", args: ["755", helper_path], sudo: true
     end

@@ -23,11 +23,8 @@ jobs:
       - name: Xcode version
         run: xcodebuild -version
 
-      # ── 3. Install mactop ──────────────────────────────────────────────────────
-      - name: Install mactop
-        run: brew install mactop
-
-      # ── 4. Build DMG ───────────────────────────────────────────────────────────
+      # ── 3. Build DMG ───────────────────────────────────────────────────────────
+      # mactop is no longer installed here — v2.0 reads sensors natively (SMC + IOReport).
       - name: Build release DMG
         env:
           CI: true
@@ -37,7 +34,7 @@ jobs:
           chmod +x scripts/build-dmg.sh
           ./scripts/build-dmg.sh
 
-      # ── 5. Publish GitHub Release ──────────────────────────────────────────────
+      # ── 4. Publish GitHub Release ──────────────────────────────────────────────
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,7 +45,7 @@ jobs:
             --generate-notes \
             --verify-tag
 
-      # ── 6. Compute DMG SHA256 ─────────────────────────────────────────────────
+      # ── 5. Compute DMG SHA256 ─────────────────────────────────────────────────
       - name: Compute SHA256
         id: sha
         run: |
@@ -57,22 +54,63 @@ jobs:
           echo "sha256=$SHA"   >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      # ── 7. Update Homebrew tap ────────────────────────────────────────────────
+      # ── 6. Update in-repo Cask ────────────────────────────────────────────────
+      # The README tells users to `brew tap ryyansafar/macmonitor https://github.com/ryyansafar/MacMonitor`
+      # which reads Casks/macmonitor.rb from this repo. Keep its version + SHA in sync
+      # with every release so `brew install --cask macmonitor` works out of the box.
+      - name: Update in-repo Cask
+        run: |
+          VERSION="${{ steps.sha.outputs.version }}"
+          SHA="${{ steps.sha.outputs.sha256 }}"
+          sed -i '' "s/^  version \".*\"/  version \"${VERSION}\"/" Casks/macmonitor.rb
+          sed -i '' "s/^  sha256 \".*\"/  sha256 \"${SHA}\"/"       Casks/macmonitor.rb
+
+      - name: Commit in-repo Cask update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/macmonitor.rb
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "chore(cask): bump in-repo cask to v${{ steps.sha.outputs.version }}"
+          # Push the cask update to main so users tapping this repo get it.
+          git push origin HEAD:main
+
+      # ── 7. Update separate Homebrew tap repo ─────────────────────────────────
+      # Kept as a secondary distribution channel for users on the legacy
+      # `ryyansafar/homebrew-macmonitor` tap. Skipped automatically if the
+      # HOMEBREW_TAP_TOKEN secret is not set (e.g., when forking).
+      - name: Check tap token
+        id: tap_token
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -n "$TAP_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "HOMEBREW_TAP_TOKEN not set — skipping separate tap update"
+          fi
+
       - name: Checkout Homebrew tap
+        if: steps.tap_token.outputs.available == 'true'
         uses: actions/checkout@v5
         with:
           repository: ryyansafar/homebrew-macmonitor
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: tap
 
-      - name: Update Cask formula
+      - name: Update tap Cask formula
+        if: steps.tap_token.outputs.available == 'true'
         run: |
           VERSION="${{ steps.sha.outputs.version }}"
           SHA="${{ steps.sha.outputs.sha256 }}"
           sed -i '' "s/  version \".*\"/  version \"${VERSION}\"/"  tap/Casks/macmonitor.rb
           sed -i '' "s/  sha256 \".*\"/  sha256 \"${SHA}\"/"        tap/Casks/macmonitor.rb
 
-      - name: Push updated formula
+      - name: Push updated tap formula
+        if: steps.tap_token.outputs.available == 'true'
         run: |
           cd tap
           git config user.name  "github-actions[bot]"

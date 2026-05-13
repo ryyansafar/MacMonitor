@@ -77,8 +77,9 @@ static IOHIDEventSystemClientRef getHIDClient(void) {
     return gHIDClient;
 }
 
-static BOOL isFloatSMCKey(SMCKeyData_keyInfo_t keyInfo) {
-    return keyInfo.dataType == 1718383648;
+static BOOL isTemperatureSMCKey(SMCKeyData_keyInfo_t keyInfo) {
+    return keyInfo.dataType == 1718383648   // flt  — IEEE 754 float
+        || keyInfo.dataType == 1936734008;  // sp78 — signed fixed-point 7.8 (Apple Silicon temp sensors)
 }
 
 static BOOL isValidTemperature(double value) {
@@ -98,7 +99,7 @@ static void loadTemperatureKeys(io_connect_t smcConn) {
         }
 
         SMCKeyData_keyInfo_t keyInfo;
-        if (SMCGetKeyInfo(smcConn, key, &keyInfo) != kIOReturnSuccess || !isFloatSMCKey(keyInfo)) {
+        if (SMCGetKeyInfo(smcConn, key, &keyInfo) != kIOReturnSuccess || !isTemperatureSMCKey(keyInfo)) {
             continue;
         }
 

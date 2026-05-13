@@ -7,6 +7,58 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ---
 
+## [2.0.1] — 2026-05-13
+
+### The "Temperatures Actually Work" Release
+
+A point release that fixes the showstopper bug where every CPU and GPU temperature read
+returned zero on Apple Silicon. If you installed 2.0.0 and saw `--°` in the menu bar or
+empty thermal panels in the dashboard, upgrade to 2.0.1.
+
+### Fixed
+
+- **Apple Silicon temperatures now read correctly** — `SMCGetFloatValue` only understood
+  the `flt` (IEEE 754 float) data type. Every modern Apple Silicon temperature sensor
+  (`Tp*`, `Te*`, `Tg*`, `TCMz`) is encoded as `sp78` — signed fixed-point 7.8 — and was
+  silently returning 0. Added an `sp78` decoder (two-byte big-endian → divide by 256) and
+  taught `isTemperatureSMCKey` to accept both formats. CPU temp, GPU temp, CPU die hotspot,
+  and battery temp now display on M1 through M5 Macs. Fixes [#2](https://github.com/ryyansafar/MacMonitor/issues/2).
+- **Long shell output no longer deadlocks the sampler** — `shellResult` and `shellStatic`
+  waited on `waitUntilExit()` before draining `stdout`/`stderr` pipes. On a busy Mac, `ps
+  -axo … -r` and `ioreg -l` exceed the ~16-64 KB pipe buffer; the child blocks on write
+  while we block on wait → permanent hang. Both helpers now read each pipe on a background
+  queue *before* the wait, eliminating the deadlock that caused `fetchNativeMetrics` to
+  appear stuck after the first tick.
+- **Homebrew install no longer fails on a placeholder checksum** — the in-repo
+  `Casks/macmonitor.rb` shipped with `PLACEHOLDER_SHA256_UPDATED_AUTOMATICALLY_BY_CI`
+  because the release workflow only updated a separate tap repo, not the cask in this
+  repo that the README's `brew tap` command points to. Replaced with the real SHA-256 and
+  fixed the release workflow to commit cask updates back to this repo going forward.
+  Fixes [#3](https://github.com/ryyansafar/MacMonitor/issues/3).
+
+### Added
+
+- **Open at Login toggle** — Settings now exposes a switch that registers MacMonitor with
+  `SMAppService` so it launches automatically at login. State is persisted in
+  `UserDefaults` and restored on every launch. No login items configuration required.
+- **Temperature in the menu bar** — when the active CPU temperature is available it now
+  appears next to the CPU percentage (e.g. `🟡 CPU 41% 48°  MEM 76%`). Hidden when the
+  reading is unavailable so unsupported machines aren't penalised with `--°`.
+
+### Changed
+
+- **Release workflow no longer installs `mactop`** — leftover step from the pre-2.0 era.
+  v2.0 reads sensors natively; the runner doesn't need `mactop` to build the DMG.
+- **Release workflow now updates the in-repo `Casks/macmonitor.rb`** in addition to the
+  separate `homebrew-macmonitor` tap, so both `brew tap ryyansafar/macmonitor
+  https://github.com/ryyansafar/MacMonitor` (per the README) and `brew tap
+  ryyansafar/homebrew-macmonitor` work after every release.
+- **Cask postflight `cp` path corrected** — `MacMonitor.app/Contents/MacOS/macmonitor-helper`
+  → `Macmonitor.app/...` to match the actual product name; previously relied on the
+  case-insensitive HFS+ default and would silently fail on case-sensitive volumes.
+
+---
+
 ## [2.0.0] — 2026-04-06
 
 ### The Native Sensors Release

@@ -410,11 +410,11 @@ class SystemStatsModel: ObservableObject {
     private func fetchNativeMetrics() {
         guard !nativeMetricsInFlight else { return }
         nativeMetricsInFlight = true
-        
+
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
             defer { DispatchQueue.main.async { self.nativeMetricsInFlight = false } }
-            
+
             let nativeData = IOReportWrapper.fetchIOReportData(withSMC: self.smcConn)
             let helperData = self.fetchHelperMetrics()
             let pData = self.mergeMetrics(primary: helperData, fallback: nativeData)
@@ -683,9 +683,28 @@ class SystemStatsModel: ObservableObject {
         } catch {
             return ("", "launch failed: \(error)", -1)
         }
+        // Drain both pipes concurrently BEFORE waitUntilExit. Otherwise, if the
+        // child writes more than the pipe buffer (~16-64 KB) it blocks on write
+        // while we block on waitUntilExit → deadlock. `ps -axo ... -r` on a busy
+        // Mac (~1000 processes) easily exceeds the buffer.
+        var outData = Data()
+        var errData = Data()
+        let group = DispatchGroup()
+        let q = DispatchQueue.global(qos: .utility)
+        group.enter()
+        q.async {
+            outData = stdout.fileHandleForReading.readDataToEndOfFile()
+            group.leave()
+        }
+        group.enter()
+        q.async {
+            errData = stderr.fileHandleForReading.readDataToEndOfFile()
+            group.leave()
+        }
         task.waitUntilExit()
-        let out = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let err = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        group.wait()
+        let out = String(data: outData, encoding: .utf8) ?? ""
+        let err = String(data: errData, encoding: .utf8) ?? ""
         return (out, err, task.terminationStatus)
     }
 }
@@ -754,8 +773,11 @@ private extension SystemStatsModel {
         task.standardOutput = pipe
         task.standardError = Pipe()
         guard (try? task.run()) != nil else { return "" }
+        // Drain pipe before waitUntilExit to avoid deadlock on large output
+        // (ioreg can emit hundreds of KB, way past the pipe buffer).
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
         task.waitUntilExit()
-        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     static func shellSingleQuote(_ value: String) -> String {

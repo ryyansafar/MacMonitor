@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import ServiceManagement
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -20,12 +21,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         model.startMonitoring()
 
         // Drive the label from published model values — fires immediately on change
-        Publishers.CombineLatest(model.$cpuUsage, model.$memPct)
+        Publishers.CombineLatest3(model.$cpuUsage, model.$memPct, model.$cpuTemp)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] cpu, mem in
-                self?.updateLabel(cpu: cpu, mem: mem)
+            .sink { [weak self] cpu, mem, temp in
+                self?.updateLabel(cpu: cpu, mem: mem, temp: temp)
             }
             .store(in: &cancellables)
+
+        // Restore Open at Login state on launch
+        if UserDefaults.standard.bool(forKey: "openAtLogin") {
+            try? SMAppService.mainApp.register()
+        }
 
         // Show welcome window on very first launch
         if !UserDefaults.standard.bool(forKey: "hasLaunched") {
@@ -59,11 +65,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private func updateLabel(cpu: Int, mem: Int) {
+    private func updateLabel(cpu: Int, mem: Int, temp: Double) {
         guard let btn = statusItem?.button else { return }
         let dot = cpu >= 85 || mem >= 85 ? "🔴"
                 : cpu >= 60 || mem >= 60 ? "🟡" : "🟢"
-        btn.title = "\(dot) CPU \(cpu)%  MEM \(mem)%"
+        let tempStr = temp > 0 ? String(format: " %.0f°", temp) : ""
+        btn.title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
     }
 
     // MARK: - Click handling

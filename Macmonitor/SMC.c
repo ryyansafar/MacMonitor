@@ -88,10 +88,17 @@ double SMCGetFloatValue(io_connect_t conn, const char *key) {
     return 0.0;
   }
 
+  // flt  (0x666C7420) — IEEE 754 float, used for power/fan keys
   if (val.keyInfo.dataType == 1718383648) {
     float f;
     memcpy(&f, val.bytes, 4);
     return (double)f;
+  }
+
+  // sp78 (0x73703738) — signed fixed-point 7.8, used for Apple Silicon temperature sensors
+  if (val.keyInfo.dataType == 1936734008) {
+    int16_t raw = (int16_t)(((unsigned char)val.bytes[0] << 8) | (unsigned char)val.bytes[1]);
+    return (double)raw / 256.0;
   }
 
   return 0.0;

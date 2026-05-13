@@ -1,4 +1,5 @@
 import SwiftUI
+import ServiceManagement
 
 // MARK: - Root
 
@@ -427,6 +428,7 @@ struct SettingsSheet: View {
     @Binding var isPresented: Bool
     @AppStorage("enableMenuBar") var enableMenuBar = true
     @AppStorage("enableWidget")  var enableWidget  = false
+    @AppStorage("openAtLogin")   var openAtLogin   = false
     @ObservedObject private var updater = UpdateChecker.shared
 
     var body: some View {
@@ -438,6 +440,21 @@ struct SettingsSheet: View {
                 Toggle("Menu Bar App", isOn: $enableMenuBar)
                     .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
                 Text("Live stats in your menu bar. Click to open the full dashboard.")
+                    .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle("Open at Login", isOn: $openAtLogin)
+                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+                    .onChange(of: openAtLogin) { enabled in
+                        if enabled {
+                            try? SMAppService.mainApp.register()
+                        } else {
+                            try? SMAppService.mainApp.unregister()
+                        }
+                    }
+                Text("Automatically start MacMonitor when you log in.")
                     .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
                     .fixedSize(horizontal: false, vertical: true)
             }
