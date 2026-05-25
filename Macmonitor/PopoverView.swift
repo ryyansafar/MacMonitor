@@ -142,23 +142,24 @@ private struct CPUSection: View {
         SectionBox(icon: "cpu", title: "CPU") {
             Row(label: "Overall") { StatBar(pct: model.cpuUsage) }
             if model.eCoreCount > 0 {
-                Row(label: "E-cluster  \(model.eCoresMHz) MHz") {
+                Row(label: "E-core  \(model.eCoresMHz) MHz") {
                     StatBar(pct: model.eCoresPct, color: Color(hex: "64D2FF"))
                 }
-                Row(label: "P-cluster  \(model.pCoresMHz) MHz") {
+            }
+            if model.pCoreCount > 0 {
+                Row(label: "P-core  \(model.pCoresMHz) MHz") {
                     StatBar(pct: model.pCoresPct, color: Color(hex: "BF5AF2"))
                 }
-                // M5+ Super cluster — only shown when present
-                if model.sClusterPct > 0 || model.sClusterMHz > 0 {
-                    Row(label: "S-cluster  \(model.sClusterMHz) MHz") {
-                        StatBar(pct: model.sClusterPct, color: Color(hex: "FF6B6B"))
-                    }
+            }
+            if model.sCoreCount > 0 {
+                Row(label: "S-core  \(model.sClusterMHz) MHz") {
+                    StatBar(pct: model.sClusterPct, color: Color(hex: "FF6B6B"))
                 }
             }
             if !model.perCoreCPU.isEmpty {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 4) {
                     ForEach(Array(model.perCoreCPU.enumerated()), id: \.offset) { i, pct in
-                        CoreTile(index: i, pct: pct, isE: i < model.eCoreCount)
+                        CoreTile(label: coreLabel(at: i), pct: pct, kind: coreKind(at: i))
                     }
                 }
                 .padding(.top, 4)
@@ -177,6 +178,41 @@ private struct CPUSection: View {
             }
             .padding(.top, 2)
         }
+    }
+
+    private func coreKind(at index: Int) -> CPUCoreKind {
+        guard model.cpuCoreKinds.indices.contains(index) else { return .performance }
+        return model.cpuCoreKinds[index]
+    }
+
+    private func coreLabel(at index: Int) -> String {
+        let kind = coreKind(at: index)
+        let ordinal = coreOrdinal(at: index, kind: kind)
+        switch kind {
+        case .efficiency:
+            return String(format: "E%02d", ordinal)
+        case .performance:
+            return String(format: "P%02d", ordinal)
+        case .superPerformance:
+            return String(format: "S%02d", ordinal)
+        }
+    }
+
+    private func coreOrdinal(at index: Int, kind: CPUCoreKind) -> Int {
+        guard !model.cpuCoreKinds.isEmpty else { return index + 1 }
+
+        var ordinal = 0
+        for currentKind in model.cpuCoreKinds.prefix(index + 1) {
+            switch (currentKind, kind) {
+            case (.efficiency, .efficiency),
+                 (.performance, .performance),
+                 (.superPerformance, .superPerformance):
+                ordinal += 1
+            default:
+                break
+            }
+        }
+        return max(ordinal, 1)
     }
 }
 
@@ -604,15 +640,22 @@ private struct StatBar: View {
 }
 
 private struct CoreTile: View {
-    let index: Int; let pct: Double; let isE: Bool
+    let label: String; let pct: Double; let kind: CPUCoreKind
     var color: Color {
         pct >= 85 ? Color(hex:"FF453A") : pct >= 60 ? Color(hex:"FFD60A")
-            : (isE ? Color(hex:"64D2FF") : Color(hex:"BF5AF2"))
+            : baseColor
+    }
+    var baseColor: Color {
+        switch kind {
+        case .efficiency: return Color(hex:"64D2FF")
+        case .performance: return Color(hex:"BF5AF2")
+        case .superPerformance: return Color(hex:"FF6B6B")
+        }
     }
     var body: some View {
         HStack(spacing: 5) {
-            Text("C\(index)").font(.system(size: 9, design: .monospaced))
-                .foregroundColor(color.opacity(0.7)).frame(width: 16)
+            Text(label).font(.system(size: 9, design: .monospaced))
+                .foregroundColor(color.opacity(0.7)).frame(width: 24, alignment: .leading)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 2).fill(Color.white.opacity(0.06))

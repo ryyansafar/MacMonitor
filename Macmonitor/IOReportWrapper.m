@@ -5,6 +5,7 @@
 #import <IOKit/hidsystem/IOHIDEventSystemClient.h>
 #import <IOKit/hidsystem/IOHIDServiceClient.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef struct IOReportSubscriptionRef *IOReportSubscriptionRef;
 extern CFDictionaryRef IOReportCopyChannelsInGroup(CFStringRef group, CFStringRef subgroup, uint64_t a, uint64_t b, uint64_t c);
@@ -48,6 +49,13 @@ static char gCpuTempKeys[64][5];
 static int gCpuTempKeyCount = 0;
 static char gGpuTempKeys[64][5];
 static int gGpuTempKeyCount = 0;
+
+typedef struct {
+    double activePct;
+    int32_t kind;
+    BOOL isPCPU;
+    int order;
+} CPUCoreSample;
 
 extern IOHIDEventSystemClientRef IOHIDEventSystemClientCreate(CFAllocatorRef allocator);
 
@@ -336,6 +344,96 @@ static double energyToWatts(int64_t energy, CFStringRef unitRef, double duration
     return 0;
 }
 
+static BOOL isIdleCPUState(const char *name) {
+    return strcmp(name, "OFF") == 0 || strcmp(name, "IDLE") == 0 || strcmp(name, "DOWN") == 0;
+}
+
+static int parseCPUStateVoltageIndex(const char *name) {
+    if (name[0] != 'V') {
+        return -1;
+    }
+
+    int index = -1;
+    sscanf(name + 1, "%d", &index);
+    return index;
+}
+
+static int parseCPUCoreOrder(const char *name) {
+    int value = 0;
+    BOOL foundDigit = NO;
+    for (const char *p = name; *p != '\0'; p++) {
+        if (*p >= '0' && *p <= '9') {
+            foundDigit = YES;
+            value = (value * 10) + (*p - '0');
+        }
+    }
+    return foundDigit ? value : 0;
+}
+
+static int cpuCoreKindSortRank(int32_t kind) {
+    switch (kind) {
+        case IOReportCPUCoreKindEfficiency:  return 0;
+        case IOReportCPUCoreKindSuper:       return 1;
+        case IOReportCPUCoreKindPerformance: return 2;
+        default:                             return 3;
+    }
+}
+
+static int compareCPUCoreSamples(const void *a, const void *b) {
+    const CPUCoreSample *left = (const CPUCoreSample *)a;
+    const CPUCoreSample *right = (const CPUCoreSample *)b;
+
+    int leftRank = cpuCoreKindSortRank(left->kind);
+    int rightRank = cpuCoreKindSortRank(right->kind);
+    if (leftRank != rightRank) {
+        return leftRank - rightRank;
+    }
+    return left->order - right->order;
+}
+
+static double cpuPerformanceStateMetrics(CFDictionaryRef channel,
+                                         const uint32_t *freqs,
+                                         int freqCount,
+                                         int *avgFreqMHz) {
+    int32_t stateCount = IOReportStateGetCount(channel);
+    int64_t totalTime  = 0;
+    int64_t activeTime = 0;
+    double  weightedFreq = 0;
+
+    if (avgFreqMHz != NULL) {
+        *avgFreqMHz = 0;
+    }
+
+    for (int32_t s = 0; s < stateCount; s++) {
+        int64_t residency = IOReportStateGetResidency(channel, s);
+        totalTime += residency;
+
+        CFStringRef snRef = IOReportStateGetNameForIndex(channel, s);
+        if (snRef == NULL) {
+            continue;
+        }
+
+        char sn[64] = {0};
+        CFStringGetCString(snRef, sn, sizeof(sn), kCFStringEncodingUTF8);
+        if (isIdleCPUState(sn)) {
+            continue;
+        }
+
+        activeTime += residency;
+
+        int vIdx = parseCPUStateVoltageIndex(sn);
+        if (freqs != NULL && vIdx >= 0 && vIdx < freqCount) {
+            weightedFreq += (double)freqs[vIdx] * residency;
+        }
+    }
+
+    if (avgFreqMHz != NULL && activeTime > 0 && weightedFreq > 0) {
+        *avgFreqMHz = (int)(weightedFreq / (double)activeTime);
+    }
+
+    return totalTime > 0 ? 100.0 * (double)activeTime / (double)totalTime : 0;
+}
+
 // Whether AMC Stats produced useful DRAM bandwidth data (probed at init).
 // On M5+ chips, AMC Stats channels exist but the kernel blocks them; we use PMP instead.
 static BOOL gAmcStatsProducesData = NO;
@@ -486,6 +584,9 @@ static BOOL gAmcStatsProducesData = NO;
     // PMP DRAM bandwidth (M5+ fallback)
     int64_t pmpDramReadBytes  = 0;
     int64_t pmpDramWriteBytes = 0;
+    CPUCoreSample coreSamples[MACMONITOR_MAX_CPU_CORES] = {0};
+    int coreSampleCount = 0;
+    BOOL hasMCPUCoreSamples = NO;
 
     CFIndex count = CFArrayGetCount(channels);
     for (CFIndex i = 0; i < count; i++) {
@@ -562,6 +663,50 @@ static BOOL gAmcStatsProducesData = NO;
             if (subgroupRef == NULL) continue;
             char sub[64] = {0};
             CFStringGetCString(subgroupRef, sub, sizeof(sub), kCFStringEncodingUTF8);
+            if (strcmp(sub, "CPU Core Performance States") == 0) {
+                BOOL isMCore = (strstr(chn, "MCPU") != NULL);
+                BOOL isSCore = (strstr(chn, "SCPU") != NULL);
+                BOOL isPCore = (strstr(chn, "PCPU") != NULL);
+                BOOL isECore = (strstr(chn, "ECPU") != NULL) || (!isMCore && !isPCore && strncmp(chn, "CPU0", 4) == 0);
+                BOOL isLegacyPCore = (!isMCore && !isPCore && strncmp(chn, "CPU1", 4) == 0);
+
+                if (!isECore && !isPCore && !isMCore && !isSCore && !isLegacyPCore) continue;
+                if (coreSampleCount >= MACMONITOR_MAX_CPU_CORES) continue;
+
+                const uint32_t *freqs = NULL;
+                int freqCount = 0;
+                int32_t kind = IOReportCPUCoreKindUnknown;
+                if (isECore) {
+                    kind = IOReportCPUCoreKindEfficiency;
+                    freqs = gECoreFreqs;
+                    freqCount = gECoreFreqCount;
+                } else if (isMCore || isLegacyPCore) {
+                    kind = IOReportCPUCoreKindPerformance;
+                    freqs = isMCore ? gMCoreFreqs : gPCoreFreqs;
+                    freqCount = isMCore ? gMCoreFreqCount : gPCoreFreqCount;
+                    if (isMCore) { hasMCPUCoreSamples = YES; }
+                } else if (isPCore) {
+                    // On M1-M4 PCPU is Performance. On M5+, MCPU carries
+                    // Performance and PCPU is Super; normalize after the loop.
+                    kind = IOReportCPUCoreKindPerformance;
+                    freqs = gPCoreFreqs;
+                    freqCount = gPCoreFreqCount;
+                } else if (isSCore) {
+                    kind = IOReportCPUCoreKindSuper;
+                    freqs = gPCoreFreqs;
+                    freqCount = gPCoreFreqCount;
+                }
+
+                double activePct = cpuPerformanceStateMetrics(channel, freqs, freqCount, NULL);
+                coreSamples[coreSampleCount++] = (CPUCoreSample){
+                    .activePct = activePct,
+                    .kind = kind,
+                    .isPCPU = isPCore,
+                    .order = parseCPUCoreOrder(chn)
+                };
+                continue;
+            }
+
             if (strcmp(sub, "CPU Complex Performance States") != 0) continue;
 
             // Guard MCPU before testing CPU0/CPU1 — "MCPU0" contains "CPU0" and would
@@ -670,6 +815,50 @@ static BOOL gAmcStatsProducesData = NO;
         data.pClusterFreqMHz = pcpuFreq;
     }
 
+    if (coreSampleCount > 0) {
+        BOOL m5StyleCPU = (mClusterCount > 0 || hasMCPUCoreSamples);
+        for (int index = 0; index < coreSampleCount; index++) {
+            if (m5StyleCPU && coreSamples[index].isPCPU) {
+                coreSamples[index].kind = IOReportCPUCoreKindSuper;
+            }
+        }
+
+        qsort(coreSamples, coreSampleCount, sizeof(CPUCoreSample), compareCPUCoreSamples);
+
+        double eSum = 0;
+        double pSum = 0;
+        double sSum = 0;
+        int eCount = 0;
+        int pCount = 0;
+        int sCount = 0;
+        data.cpuCoreCount = coreSampleCount;
+        for (int index = 0; index < coreSampleCount; index++) {
+            data.cpuCoreActive[index] = coreSamples[index].activePct;
+            data.cpuCoreKind[index] = coreSamples[index].kind;
+
+            switch (coreSamples[index].kind) {
+                case IOReportCPUCoreKindEfficiency:
+                    eSum += coreSamples[index].activePct;
+                    eCount++;
+                    break;
+                case IOReportCPUCoreKindPerformance:
+                    pSum += coreSamples[index].activePct;
+                    pCount++;
+                    break;
+                case IOReportCPUCoreKindSuper:
+                    sSum += coreSamples[index].activePct;
+                    sCount++;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (eCount > 0) { data.eClusterActive = eSum / (double)eCount; }
+        if (pCount > 0) { data.pClusterActive = pSum / (double)pCount; }
+        if (sCount > 0) { data.sClusterActive = sSum / (double)sCount; }
+    }
+
     // Use PMP DRAM bytes when AMC Stats produced nothing (M5+).
     if (data.dramReadBytes == 0 && data.dramWriteBytes == 0) {
         data.dramReadBytes  = pmpDramReadBytes;
@@ -695,6 +884,22 @@ static BOOL gAmcStatsProducesData = NO;
 
     CFRelease(delta);
     return data;
+}
+
++ (NSArray<NSNumber *> *)cpuCoreActiveValuesForData:(IOReportData)data {
+    NSMutableArray<NSNumber *> *values = [NSMutableArray arrayWithCapacity:data.cpuCoreCount];
+    for (int32_t index = 0; index < data.cpuCoreCount && index < MACMONITOR_MAX_CPU_CORES; index++) {
+        [values addObject:@(data.cpuCoreActive[index])];
+    }
+    return values;
+}
+
++ (NSArray<NSNumber *> *)cpuCoreKindValuesForData:(IOReportData)data {
+    NSMutableArray<NSNumber *> *values = [NSMutableArray arrayWithCapacity:data.cpuCoreCount];
+    for (int32_t index = 0; index < data.cpuCoreCount && index < MACMONITOR_MAX_CPU_CORES; index++) {
+        [values addObject:@(data.cpuCoreKind[index])];
+    }
+    return values;
 }
 
 @end

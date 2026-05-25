@@ -14,6 +14,24 @@ struct ProcInfo: Identifiable {
     let mem:  Int64
 }
 
+enum CPUCoreKind {
+    case efficiency
+    case performance
+    case superPerformance
+}
+
+private struct CPUCoreTopology {
+    let efficiencyCount: Int
+    let performanceCount: Int
+    let superCount: Int
+    let orderedKinds: [CPUCoreKind]
+}
+
+private struct CPUCoreSamples {
+    let active: [Double]
+    let kinds: [CPUCoreKind]
+}
+
 // MARK: - Model
 
 class SystemStatsModel: ObservableObject {
@@ -81,6 +99,8 @@ class SystemStatsModel: ObservableObject {
     @Published var chipName:     String = "Apple Silicon"  // e.g. "M2", "M2 Pro", "M2 Max"
     @Published var eCoreCount:   Int    = 0
     @Published var pCoreCount:   Int    = 0
+    @Published var sCoreCount:   Int    = 0
+    @Published var cpuCoreKinds: [CPUCoreKind] = []
     @Published var gpuCoreCount: Int    = 0
 
     // Fan (0 = fanless model, e.g. MacBook Air)
@@ -107,6 +127,7 @@ class SystemStatsModel: ObservableObject {
     private var diskInFlight          = false  // prevent concurrent ioreg calls piling up
     private var prevTickTime: Date  = Date()
     private var batterySampleCountdown    = 0
+    private var hasIOReportCPUCoreSamples = false
     private var timer: Timer?
     private var diskTimer: Timer?          // independent timer — keeps ioreg off samplerQueue
     private let samplerQueue = DispatchQueue(label: "rybo.Macmonitor.sampler", qos: .utility)
@@ -182,7 +203,10 @@ class SystemStatsModel: ObservableObject {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.cpuUsage    = Int(cpu.rounded())
-                self.perCoreCPU  = cores
+                if !self.hasIOReportCPUCoreSamples {
+                    self.perCoreCPU = cores
+                    self.updateCPUClusterUsageFromPerCore()
+                }
                 self.memUsed     = mUsed
                 self.memTotal    = mTot
                 self.memPct      = mTot > 0 ? Int(mUsed * 100 / mTot) : 0
@@ -439,12 +463,17 @@ class SystemStatsModel: ObservableObject {
 
                 self.gpuUsage  = Int(pData.gpuUsage.rounded())
                 self.gpuMHz    = Int(pData.gpuFreqMHz)
-                self.eCoresPct = Int(pData.eClusterActive.rounded())
-                self.pCoresPct = Int(pData.pClusterActive.rounded())
                 self.eCoresMHz = Int(pData.eClusterFreqMHz)
                 self.pCoresMHz = Int(pData.pClusterFreqMHz)
-                self.sClusterPct = Int(pData.sClusterActive.rounded())
                 self.sClusterMHz = Int(pData.sClusterFreqMHz)
+
+                let cpuCores = Self.cpuCoreSamples(from: pData)
+                if !cpuCores.active.isEmpty {
+                    self.hasIOReportCPUCoreSamples = true
+                    self.perCoreCPU = cpuCores.active
+                    self.cpuCoreKinds = cpuCores.kinds
+                    self.updateCPUClusterUsageFromPerCore()
+                }
 
                 // DRAM bandwidth: bytes transferred / sample interval (0.1 s) → GB/s
                 let totalDramBytes = pData.dramReadBytes + pData.dramWriteBytes
@@ -533,11 +562,30 @@ class SystemStatsModel: ObservableObject {
         result.gpuFreqMHz      = i32("gpuFreqMHz")
         result.eClusterActive  = dbl("eClusterActive")
         result.pClusterActive  = dbl("pClusterActive")
+        result.sClusterActive  = dbl("sClusterActive")
         result.eClusterFreqMHz = i32("eClusterFreqMHz")
         result.pClusterFreqMHz = i32("pClusterFreqMHz")
+        result.sClusterFreqMHz = i32("sClusterFreqMHz")
         result.dramReadBytes   = i64("dramReadBytes")
         result.dramWriteBytes  = i64("dramWriteBytes")
         result.fanRPM          = i32("fanRPM")
+        if let activeValues = payload["cpuCoreActive"] as? [NSNumber],
+           let kindValues = payload["cpuCoreKinds"] as? [NSNumber] {
+            let count = min(activeValues.count, kindValues.count, 32)
+            result.cpuCoreCount = Int32(count)
+            withUnsafeMutableBytes(of: &result.cpuCoreActive) { rawBuffer in
+                let buffer = rawBuffer.bindMemory(to: Double.self)
+                for index in 0..<count {
+                    buffer[index] = activeValues[index].doubleValue
+                }
+            }
+            withUnsafeMutableBytes(of: &result.cpuCoreKind) { rawBuffer in
+                let buffer = rawBuffer.bindMemory(to: Int32.self)
+                for index in 0..<count {
+                    buffer[index] = kindValues[index].int32Value
+                }
+            }
+        }
         return result
     }
 
@@ -597,6 +645,11 @@ class SystemStatsModel: ObservableObject {
         if primary.dramWriteBytes > 0  { merged.dramWriteBytes  = primary.dramWriteBytes }
         if primary.cpuDieHotspot > 0   { merged.cpuDieHotspot   = primary.cpuDieHotspot }
         if primary.fanRPM > 0          { merged.fanRPM          = primary.fanRPM }
+        if primary.cpuCoreCount > 0 {
+            merged.cpuCoreCount = primary.cpuCoreCount
+            merged.cpuCoreActive = primary.cpuCoreActive
+            merged.cpuCoreKind = primary.cpuCoreKind
+        }
         return merged
     }
 
@@ -607,18 +660,60 @@ class SystemStatsModel: ObservableObject {
             ?? Self.sysctlString("hw.model")
             ?? "Apple Silicon"
         let chip = rawBrand.hasPrefix("Apple ") ? String(rawBrand.dropFirst(6)) : rawBrand
-        let eCores = Self.sysctlInt("hw.perflevel0.physicalcpu")
-        let pCores = Self.sysctlInt("hw.perflevel1.physicalcpu")
+        let cpuTopology = Self.detectCPUCoreTopology()
         let gpuCores = Self.detectGPUCoreCount()
         let thermal = Self.currentThermalState()
 
         DispatchQueue.main.async {
             self.chipName = chip
-            self.eCoreCount = eCores
-            self.pCoreCount = pCores > 0 ? pCores : max(0, ProcessInfo.processInfo.processorCount - eCores)
+            self.eCoreCount = cpuTopology.efficiencyCount
+            self.pCoreCount = cpuTopology.performanceCount
+            self.sCoreCount = cpuTopology.superCount
+            self.cpuCoreKinds = cpuTopology.orderedKinds
+            self.updateCPUClusterUsageFromPerCore()
             self.gpuCoreCount = gpuCores
             self.thermalState = thermal
         }
+    }
+
+    private func updateCPUClusterUsageFromPerCore() {
+        var eSum = 0.0
+        var pSum = 0.0
+        var sSum = 0.0
+        var eSamples = 0
+        var pSamples = 0
+        var sSamples = 0
+
+        for (index, pct) in perCoreCPU.enumerated() {
+            let kind: CPUCoreKind
+            if cpuCoreKinds.indices.contains(index) {
+                kind = cpuCoreKinds[index]
+            } else if index < eCoreCount {
+                kind = .efficiency
+            } else if index < eCoreCount + pCoreCount {
+                kind = .performance
+            } else if index < eCoreCount + pCoreCount + sCoreCount {
+                kind = .superPerformance
+            } else {
+                continue
+            }
+
+            switch kind {
+            case .efficiency:
+                eSum += pct
+                eSamples += 1
+            case .performance:
+                pSum += pct
+                pSamples += 1
+            case .superPerformance:
+                sSum += pct
+                sSamples += 1
+            }
+        }
+
+        eCoresPct = eSamples > 0 ? Int((eSum / Double(eSamples)).rounded()) : 0
+        pCoresPct = pSamples > 0 ? Int((pSum / Double(pSamples)).rounded()) : 0
+        sClusterPct = sSamples > 0 ? Int((sSum / Double(sSamples)).rounded()) : 0
     }
 
     // MARK: - Optimize
@@ -740,6 +835,101 @@ private extension SystemStatsModel {
         var size = MemoryLayout<Int32>.size
         guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return 0 }
         return Int(value)
+    }
+
+    static func cpuCoreSamples(from data: IOReportData) -> CPUCoreSamples {
+        guard data.cpuCoreCount > 0,
+              let activeValues = IOReportWrapper.cpuCoreActiveValues(for: data),
+              let kindValues = IOReportWrapper.cpuCoreKindValues(for: data) else {
+            return CPUCoreSamples(active: [], kinds: [])
+        }
+
+        let count = min(Int(data.cpuCoreCount), activeValues.count, kindValues.count)
+        guard count > 0 else {
+            return CPUCoreSamples(active: [], kinds: [])
+        }
+
+        var active: [Double] = []
+        var kinds: [CPUCoreKind] = []
+        active.reserveCapacity(count)
+        kinds.reserveCapacity(count)
+
+        for index in 0..<count {
+            active.append(activeValues[index].doubleValue)
+            switch kindValues[index].int32Value {
+            case 1:
+                kinds.append(.efficiency)
+            case 3:
+                kinds.append(.superPerformance)
+            default:
+                kinds.append(.performance)
+            }
+        }
+
+        return CPUCoreSamples(active: active, kinds: kinds)
+    }
+
+    static func detectCPUCoreTopology() -> CPUCoreTopology {
+        let levelCount = Self.sysctlInt("hw.nperflevels")
+        var eCount = 0
+        var pCount = 0
+        var sCount = 0
+        var orderedKinds: [CPUCoreKind] = []
+        var unknownCount = 0
+        var recognizedCount = 0
+
+        if levelCount > 0 {
+            for index in 0..<levelCount {
+                let count = Self.sysctlInt("hw.perflevel\(index).physicalcpu")
+                guard count > 0 else { continue }
+
+                let name = Self.sysctlString("hw.perflevel\(index).name")?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased() ?? ""
+
+                if name.contains("efficiency") {
+                    eCount += count
+                    recognizedCount += count
+                    orderedKinds += Array(repeating: .efficiency, count: count)
+                } else if name.contains("super") {
+                    sCount += count
+                    recognizedCount += count
+                    orderedKinds += Array(repeating: .superPerformance, count: count)
+                } else if name.contains("performance") {
+                    pCount += count
+                    recognizedCount += count
+                    orderedKinds += Array(repeating: .performance, count: count)
+                } else {
+                    unknownCount += count
+                }
+            }
+
+            if recognizedCount > 0 {
+                if unknownCount > 0 {
+                    pCount += unknownCount
+                    orderedKinds += Array(repeating: .performance, count: unknownCount)
+                }
+                return CPUCoreTopology(
+                    efficiencyCount: eCount,
+                    performanceCount: pCount,
+                    superCount: sCount,
+                    orderedKinds: orderedKinds
+                )
+            }
+        }
+
+        // Fallback for older macOS versions that expose perflevel counts but not names.
+        let eCores = Self.sysctlInt("hw.perflevel0.physicalcpu")
+        let pLevelCores = Self.sysctlInt("hw.perflevel1.physicalcpu")
+        let totalCores = ProcessInfo.processInfo.processorCount
+        let pCores = pLevelCores > 0 ? pLevelCores : max(0, totalCores - eCores)
+        return CPUCoreTopology(
+            efficiencyCount: eCores,
+            performanceCount: pCores,
+            superCount: 0,
+            orderedKinds: Array(repeating: .efficiency, count: eCores)
+                + Array(repeating: .performance, count: pCores)
+        )
     }
 
     static func firstSizeMatch(in text: String, pattern: String) -> Int64 {
