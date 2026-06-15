@@ -15,16 +15,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+        // Menu-bar-only by default; show in Dock when the user opts in.
+        NSApp.setActivationPolicy(
+            UserDefaults.standard.bool(forKey: "showDockIcon") ? .regular : .accessory)
 
         setupMenuBar()
         model.startMonitoring()
 
-        // Drive the label from published model values — fires immediately on change
-        Publishers.CombineLatest3(model.$cpuUsage, model.$memPct, model.$cpuTemp)
+        // Drive the label from published model values — fires immediately on change.
+        // Dot color uses memory *pressure* (the real health signal), not used %,
+        // because macOS keeps used % high by design — it would pin the dot yellow.
+        Publishers.CombineLatest4(model.$cpuUsage, model.$memPressureLevel, model.$cpuTemp, model.$totalPower)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] cpu, mem, temp in
-                self?.updateLabel(cpu: cpu, mem: mem, temp: temp)
+            .sink { [weak self] cpu, pressure, temp, power in
+                self?.updateLabel(cpu: cpu, pressure: pressure, temp: temp, power: power)
             }
             .store(in: &cancellables)
 
@@ -49,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu bar
 
     private func setupMenuBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem?.button {
             btn.image = createCircleImage(color: .systemGreen)
             btn.title = ""
@@ -79,23 +83,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func updateLabel(cpu: Int, mem: Int, temp: Double) {
+    private func updateLabel(cpu: Int, pressure: Int, temp: Double, power: Double) {
         guard let btn = statusItem?.button else { return }
-        
+
+        // pressure: 1 = Normal, 2 = Warning, 4 = Critical
         let color: NSColor
-        if cpu >= 85 || mem >= 85 {
+        if cpu >= 85 || pressure >= 4 {
             color = .systemRed
-        } else if cpu >= 60 || mem >= 60 {
+        } else if cpu >= 60 || pressure >= 2 {
             color = .systemYellow
         } else {
             color = .systemGreen
         }
-        
-        btn.image = createCircleImage(color: color)
-        btn.title = ""
-        
-        let tempStr = temp > 0 ? String(format: " %.0f°C", temp) : ""
-        btn.toolTip = "CPU: \(cpu)% \(tempStr)\nMEM: \(mem)%"
+
+        // Menu bar content depends on the chosen style.
+        switch UserDefaults.standard.string(forKey: "menuBarStyle") ?? "dot" {
+        case "cpu":
+            btn.image = nil
+            setColoredTitle("\(cpu)%", color: color, on: btn)
+        case "temp":
+            btn.image = nil
+            setColoredTitle(temp > 0 ? formatTemp(temp) : "—", color: color, on: btn)
+        case "power":
+            btn.image = nil
+            setColoredTitle(String(format: "%.1fW", power), color: color, on: btn)
+        default: // "dot"
+            btn.image = createCircleImage(color: color)
+            btn.title = ""
+            btn.attributedTitle = NSAttributedString(string: "")
+        }
+
+        let pressureWord = pressure >= 4 ? "Critical" : pressure >= 2 ? "Warning" : "Normal"
+        let tempStr = temp > 0 ? String(format: " %@", formatTemp(temp)) : ""
+        btn.toolTip = "CPU: \(cpu)% \(tempStr)\nMEM: \(model.memPct)%  ·  Pressure: \(pressureWord)"
+    }
+
+    private func setColoredTitle(_ text: String, color: NSColor, on btn: NSStatusBarButton) {
+        btn.attributedTitle = NSAttributedString(string: text, attributes: [
+            .foregroundColor: color,
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium),
+        ])
     }
 
     // MARK: - Click handling
@@ -113,7 +140,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            if let win = popover.contentViewController?.view.window {
+                // Let the popover float into another app's fullscreen Space.
+                // Without this it only appears over fullscreen apps when we run as
+                // an accessory app; with the Dock icon on (.regular) it would
+                // otherwise be confined to the app's own Space.
+                win.collectionBehavior.insert(.canJoinAllSpaces)
+                win.collectionBehavior.insert(.fullScreenAuxiliary)
+                win.makeKey()
+            }
         }
     }
 
@@ -159,7 +194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func openSettings() {
         let win = NSWindow(
-            contentRect:  NSRect(x: 0, y: 0, width: 320, height: 280),
+            contentRect:  NSRect(x: 0, y: 0, width: 320, height: 560),
             styleMask:    [.titled, .closable, .fullSizeContentView],
             backing:      .buffered,
             defer:        false

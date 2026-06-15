@@ -7,6 +7,18 @@ struct PopoverView: View {
     @ObservedObject var model: SystemStatsModel
     @State private var showSettings = false
 
+    // Section visibility (configurable in Settings). Each section is preceded by a
+    // separator, so hiding a section hides its separator too — no stray dividers.
+    @AppStorage("showCPU")        private var showCPU        = true
+    @AppStorage("showGPU")        private var showGPU        = true
+    @AppStorage("showMemory")     private var showMemory     = true
+    @AppStorage("showDisk")       private var showDisk       = true
+    @AppStorage("showSystem")     private var showSystem     = true
+    @AppStorage("showBattery")    private var showBattery    = true
+    @AppStorage("showNetwork")    private var showNetwork    = true
+    @AppStorage("showPower")      private var showPower      = true
+    @AppStorage("showProcesses")  private var showProcesses  = true
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
@@ -14,24 +26,16 @@ struct PopoverView: View {
                 if model.helperMissing {
                     HelperMissingBanner()
                 }
-                sep
-                CPUSection(model: model)
-                sep
-                GPUSection(model: model)
-                if model.fanRPM > 0 {
-                    sep
-                    FanSection(model: model)
-                }
-                sep
-                MemorySection(model: model)
-                sep
-                BatterySection(model: model)
-                sep
-                NetworkDiskSection(model: model)
-                sep
-                PowerSection(model: model)
-                sep
-                ProcessSection(model: model)
+                if showCPU { sep; CPUSection(model: model) }
+                if showGPU { sep; GPUSection(model: model) }
+                if model.fanRPM > 0 { sep; FanSection(model: model) }
+                if showMemory { sep; MemorySection(model: model) }
+                if showDisk { sep; DiskSection(model: model) }
+                if showNetwork { sep; NetworkSection(model: model) }
+                if showSystem { sep; SystemSection(model: model) }
+                if showBattery { sep; BatterySection(model: model) }
+                if showPower { sep; PowerSection(model: model) }
+                if showProcesses { sep; ProcessSection(model: model) }
                 sep
                 FooterBar(model: model)
             }
@@ -164,11 +168,11 @@ private struct CPUSection: View {
                 .padding(.top, 4)
             }
             HStack {
-                Pill(icon: "thermometer", val: String(format: "%.0f°C", model.cpuTemp),
+                Pill(icon: "thermometer", val: formatTemp(model.cpuTemp),
                      color: tempColor(model.cpuTemp))
                 if model.cpuDieHotspot > 0 {
                     Pill(icon: "thermometer.sun.fill",
-                         val: String(format: "%.0f°C", model.cpuDieHotspot),
+                         val: formatTemp(model.cpuDieHotspot),
                          color: tempColor(model.cpuDieHotspot))
                 }
                 Spacer()
@@ -208,7 +212,7 @@ private struct GPUSection: View {
                 StatBar(pct: model.gpuUsage, color: Color(hex: "FF9F0A"))
             }
             HStack {
-                Pill(icon: "thermometer", val: String(format: "%.0f°C", model.gpuTemp),
+                Pill(icon: "thermometer", val: formatTemp(model.gpuTemp),
                      color: tempColor(model.gpuTemp))
                 Spacer()
                 Pill(icon: "bolt", val: String(format: "%.3f W", model.gpuPower),
@@ -223,15 +227,80 @@ private struct GPUSection: View {
 
 private struct MemorySection: View {
     @ObservedObject var model: SystemStatsModel
+
+    var pressureLabel: String {
+        switch model.memPressureLevel {
+        case 4:  return "Critical"
+        case 2:  return "Warning"
+        default: return "Normal"
+        }
+    }
+    var pressureColor: Color {
+        switch model.memPressureLevel {
+        case 4:  return Color(hex: "FF453A")
+        case 2:  return Color(hex: "FFD60A")
+        default: return Color(hex: "30D158")
+        }
+    }
+
     var body: some View {
         SectionBox(icon: "memorychip", title: "Memory") {
             Row(label: "\(fmtB(model.memUsed)) / \(fmtB(model.memTotal))") {
                 StatBar(pct: model.memPct, color: Color(hex: "0A84FF"))
             }
+            HStack(spacing: 5) {
+                Circle().fill(pressureColor).frame(width: 6, height: 6)
+                Text("Pressure: \(pressureLabel)")
+                    .font(.system(size: 11)).foregroundColor(pressureColor)
+                Spacer()
+            }
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
+                GridRow {
+                    KV("App",        fmtB(model.memApp))
+                    KV("Wired",      fmtB(model.memWired))
+                }
+                GridRow {
+                    KV("Compressed", fmtB(model.memCompressed))
+                    KV("Cached",     fmtB(model.memCached))
+                }
+                GridRow {
+                    KV("DRAM BW",    String(format: "%.1f GB/s", model.dramBW))
+                    KV("Swap", model.swapTotal > 0
+                        ? "\(fmtB(model.swapUsed)) / \(fmtB(model.swapTotal))" : "None")
+                }
+            }
+            .padding(.top, 2)
+        }
+    }
+}
+
+// MARK: - System (uptime, load average)
+
+private struct SystemSection: View {
+    @ObservedObject var model: SystemStatsModel
+    var body: some View {
+        SectionBox(icon: "clock", title: "System") {
             HStack(spacing: 16) {
-                KV("DRAM BW",  String(format: "%.1f GB/s", model.dramBW))
-                KV("Swap", model.swapTotal > 0
-                    ? "\(fmtB(model.swapUsed)) / \(fmtB(model.swapTotal))" : "None")
+                KV("Uptime", fmtUptime(model.uptime))
+                KV("Load (1·5·15m)",
+                   model.loadAvg.map { String(format: "%.2f", $0) }.joined(separator: " · "))
+            }
+        }
+    }
+}
+
+// MARK: - Disk
+
+private struct DiskSection: View {
+    @ObservedObject var model: SystemStatsModel
+    var body: some View {
+        SectionBox(icon: "internaldrive", title: "Disk") {
+            Row(label: "\(fmtB(model.diskSpaceUsed)) / \(fmtB(model.diskSpaceTotal))") {
+                StatBar(pct: model.diskSpacePct, color: Color(hex: "BF5AF2"))
+            }
+            HStack(spacing: 16) {
+                IORow(icon: "arrow.down", val: String(format: "%.0f KB/s", model.diskReadKBs),  color: Color(hex:"64D2FF"))
+                IORow(icon: "arrow.up",   val: String(format: "%.0f KB/s", model.diskWriteKBs), color: Color(hex:"FF9F0A"))
             }
             .padding(.top, 2)
         }
@@ -273,7 +342,7 @@ private struct BatterySection: View {
                 }
                 GridRow {
                     KV("Temp",       model.batteryTempC > 0
-                        ? String(format: "%.1f °C", model.batteryTempC) : "—")
+                        ? formatTemp(model.batteryTempC, decimals: 1) : "—")
                     KV("Cycles",     model.batteryCycles > 0
                         ? "\(model.batteryCycles)" : "—")
                 }
@@ -288,21 +357,53 @@ private struct BatterySection: View {
     }
 }
 
-// MARK: - Network + Disk
+// MARK: - Network
 
-private struct NetworkDiskSection: View {
+private struct NetworkSection: View {
     @ObservedObject var model: SystemStatsModel
+
+    var isWiFi: Bool { model.netLinkType == "Wi-Fi" }
+
+    var signalLabel: String {
+        model.wifiRSSI == 0 ? "—" : "\(model.wifiRSSI) dBm"
+    }
+    var signalColor: Color {
+        let r = model.wifiRSSI
+        if r == 0   { return Color(hex: "666680") }
+        if r >= -60 { return Color(hex: "30D158") }
+        if r >= -70 { return Color(hex: "FFD60A") }
+        return Color(hex: "FF453A")
+    }
+
+    var icon: String {
+        model.netLinkType == "Ethernet" ? "cable.connector" : "wifi"
+    }
+
     var body: some View {
-        HStack(spacing: 0) {
-            SectionBox(icon: "wifi", title: "Network") {
+        SectionBox(icon: icon, title: "Network") {
+            HStack(spacing: 16) {
                 IORow(icon: "arrow.down", val: fmtB(model.netInBps)  + "/s", color: Color(hex:"30D158"))
                 IORow(icon: "arrow.up",   val: fmtB(model.netOutBps) + "/s", color: Color(hex:"FF9F0A"))
             }
-            Rectangle().fill(Color.white.opacity(0.06)).frame(width: 1)
-            SectionBox(icon: "internaldrive", title: "Disk I/O") {
-                IORow(icon: "arrow.down", val: String(format: "%.0f KB/s", model.diskReadKBs),  color: Color(hex:"64D2FF"))
-                IORow(icon: "arrow.up",   val: String(format: "%.0f KB/s", model.diskWriteKBs), color: Color(hex:"FF9F0A"))
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
+                GridRow {
+                    KV("Connection", model.netLinkType.isEmpty ? "—" : model.netLinkType)
+                    KV("IP", model.ipAddress)
+                }
+                if isWiFi {
+                    GridRow {
+                        KV("SSID", model.ssid.isEmpty ? "—" : model.ssid)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Signal").font(.system(size: 9)).foregroundColor(Color(hex: "666680"))
+                            Text(signalLabel)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(signalColor)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
             }
+            .padding(.top, 2)
         }
     }
 }
@@ -429,20 +530,60 @@ struct SettingsSheet: View {
     @AppStorage("enableMenuBar") var enableMenuBar = true
     @AppStorage("enableWidget")  var enableWidget  = false
     @AppStorage("openAtLogin")   var openAtLogin   = false
+    @AppStorage("showDockIcon")  var showDockIcon  = false
+
+    // Display
+    @AppStorage("tempUnit")        var tempUnit        = "C"
+    @AppStorage("menuBarStyle")    var menuBarStyle    = "dot"
+    @AppStorage("refreshInterval") var refreshInterval = 2
+    @AppStorage("topProcCount")    var topProcCount    = 8
+
+    // Dashboard section visibility
+    @AppStorage("showCPU")       var showCPU       = true
+    @AppStorage("showGPU")       var showGPU       = true
+    @AppStorage("showMemory")    var showMemory    = true
+    @AppStorage("showDisk")      var showDisk      = true
+    @AppStorage("showSystem")    var showSystem    = true
+    @AppStorage("showBattery")   var showBattery   = true
+    @AppStorage("showNetwork")   var showNetwork   = true
+    @AppStorage("showPower")     var showPower     = true
+    @AppStorage("showProcesses") var showProcesses = true
+
     @ObservedObject private var updater = UpdateChecker.shared
+    @ObservedObject private var location = LocationAuthManager.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Settings")
-                .font(.system(size: 16, weight: .bold)).foregroundColor(.white)
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Settings")
+                        .font(.system(size: 16, weight: .bold)).foregroundColor(.white)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Toggle("Menu Bar App", isOn: $enableMenuBar)
-                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
-                Text("Live stats in your menu bar. Click to open the full dashboard.")
-                    .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
-                    .fixedSize(horizontal: false, vertical: true)
+                    generalGroup
+                    displayGroup
+                    sectionsGroup
+                }
+                .padding(22)
             }
+
+            Divider().background(Color.white.opacity(0.1))
+
+            aboutBar
+                .padding(.horizontal, 22).padding(.vertical, 14)
+        }
+        .frame(width: 320, height: 560)
+        .background(Color(hex: "1C1C1E"))
+        .preferredColorScheme(.dark)
+    }
+
+    // MARK: General
+
+    private var generalGroup: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            groupHeader("General")
+
+            settingToggle("Menu Bar App", $enableMenuBar,
+                          "Live stats in your menu bar. Click to open the full dashboard.")
 
             VStack(alignment: .leading, spacing: 6) {
                 Toggle("Open at Login", isOn: $openAtLogin)
@@ -454,22 +595,161 @@ struct SettingsSheet: View {
                             try? SMAppService.mainApp.unregister()
                         }
                     }
-                Text("Automatically start MacMonitor when you log in.")
-                    .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
-                    .fixedSize(horizontal: false, vertical: true)
+                settingCaption("Automatically start MacMonitor when you log in.")
+            }
+
+            settingToggle("Desktop Widget", $enableWidget,
+                          "Right-click your desktop → Edit Widgets → find MacMonitor.")
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle("Show Dock Icon", isOn: $showDockIcon)
+                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+                    .onChange(of: showDockIcon) { on in
+                        NSApp.setActivationPolicy(on ? .regular : .accessory)
+                        if on { NSApp.activate(ignoringOtherApps: true) }
+                    }
+                settingCaption("Show MacMonitor in the Dock and app switcher.")
+            }
+        }
+    }
+
+    // MARK: Display
+
+    private var displayGroup: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            groupHeader("Display")
+
+            settingRow("Temperature") {
+                Picker("", selection: $tempUnit) {
+                    Text("°C").tag("C")
+                    Text("°F").tag("F")
+                }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 110)
+            }
+
+            settingRow("Menu Bar") {
+                Picker("", selection: $menuBarStyle) {
+                    Text("Dot").tag("dot")
+                    Text("CPU").tag("cpu")
+                    Text("Temp").tag("temp")
+                    Text("Watts").tag("power")
+                }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 170)
+            }
+
+            settingRow("Refresh") {
+                Picker("", selection: $refreshInterval) {
+                    Text("1s").tag(1)
+                    Text("2s").tag(2)
+                    Text("5s").tag(5)
+                }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 110)
+            }
+
+            settingRow("Processes") {
+                Picker("", selection: $topProcCount) {
+                    Text("5").tag(5)
+                    Text("8").tag(8)
+                    Text("10").tag(10)
+                    Text("15").tag(15)
+                }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 140)
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Toggle("Desktop Widget", isOn: $enableWidget)
-                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
-                Text("Right-click your desktop → Edit Widgets → find MacMonitor.")
-                    .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
-                    .fixedSize(horizontal: false, vertical: true)
+                settingRow("Wi-Fi name & signal") { wifiAccessControl }
+                settingCaption("Shows the Wi-Fi network name and signal in the Network section. macOS requires Location access to read the network name.")
             }
+        }
+    }
 
-            Divider().background(Color.white.opacity(0.1))
+    @ViewBuilder
+    private var wifiAccessControl: some View {
+        if location.isGranted {
+            HStack(spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
+                Text("Granted")
+            }
+            .font(.system(size: 11, weight: .medium)).foregroundColor(Color(hex: "30D158"))
+        } else if location.isDenied {
+            Button("Open Settings") {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            .buttonStyle(.bordered).font(.system(size: 11))
+        } else {
+            Button("Allow") { location.request() }
+                .buttonStyle(.borderedProminent).tint(Color(hex: "0A84FF"))
+                .font(.system(size: 11, weight: .medium))
+        }
+    }
 
-            HStack(alignment: .center, spacing: 8) {
+    // MARK: Dashboard sections
+
+    private var sectionsGroup: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            groupHeader("Dashboard Sections")
+            LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading),
+                                GridItem(.flexible(), alignment: .leading)],
+                      spacing: 8) {
+                compactToggle("CPU", $showCPU)
+                compactToggle("GPU", $showGPU)
+                compactToggle("Memory", $showMemory)
+                compactToggle("Disk", $showDisk)
+                compactToggle("System", $showSystem)
+                compactToggle("Battery", $showBattery)
+                compactToggle("Network", $showNetwork)
+                compactToggle("Power Rails", $showPower)
+                compactToggle("Processes", $showProcesses)
+            }
+        }
+    }
+
+    // MARK: Building blocks
+
+    private func groupHeader(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 9, weight: .semibold, design: .rounded))
+            .foregroundColor(Color(hex: "888899")).tracking(0.6)
+    }
+
+    private func settingCaption(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11)).foregroundColor(Color(hex: "666680"))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func settingToggle(_ title: String, _ binding: Binding<Bool>,
+                               _ caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(title, isOn: binding)
+                .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+            settingCaption(caption)
+        }
+    }
+
+    private func settingRow<Content: View>(_ title: String,
+                                           @ViewBuilder _ control: () -> Content) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 12)).foregroundColor(Color(hex: "EBEBF5"))
+            Spacer()
+            control()
+        }
+    }
+
+    private func compactToggle(_ title: String, _ binding: Binding<Bool>) -> some View {
+        Toggle(title, isOn: binding)
+            .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+            .font(.system(size: 12))
+            .foregroundColor(Color(hex: "EBEBF5"))
+    }
+
+    // MARK: About / update
+
+    private var aboutBar: some View {
+        HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("MacMonitor  v\(updater.currentVersion)")
                         .font(.system(size: 11, weight: .semibold)).foregroundColor(.white)
@@ -541,11 +821,7 @@ struct SettingsSheet: View {
                 }
             }
         }
-        .padding(22).frame(width: 320)
-        .background(Color(hex: "1C1C1E"))
-        .preferredColorScheme(.dark)
     }
-}
 
 // MARK: - Reusable atoms
 
@@ -667,6 +943,14 @@ private func fmtB(_ b: Int64) -> String {
     if d >= 1_048_576     { return String(format: "%.1f MB", d/1_048_576) }
     if d >= 1_024         { return String(format: "%.0f KB", d/1_024) }
     return "\(b) B"
+}
+
+private func fmtUptime(_ seconds: TimeInterval) -> String {
+    let s = Int(seconds)
+    let d = s / 86400, h = (s % 86400) / 3600, m = (s % 3600) / 60
+    if d > 0 { return "\(d)d \(h)h \(m)m" }
+    if h > 0 { return "\(h)h \(m)m" }
+    return "\(m)m"
 }
 
 private func tempColor(_ t: Double) -> Color {

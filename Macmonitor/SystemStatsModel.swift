@@ -3,6 +3,8 @@ import AppKit
 import Darwin
 import Combine
 import OSLog
+import SystemConfiguration
+import CoreWLAN
 
 // MARK: - Types
 
@@ -52,6 +54,23 @@ class SystemStatsModel: ObservableObject {
     @Published var memPct:      Int     = 0
     @Published var swapUsed:    Int64   = 0
     @Published var swapTotal:   Int64   = 0
+    // Memory pressure: kernel level 1 = Normal, 2 = Warning, 4 = Critical
+    @Published var memPressureLevel: Int = 1
+    // Breakdown (Activity Monitor style)
+    @Published var memApp:        Int64 = 0
+    @Published var memWired:      Int64 = 0
+    @Published var memCompressed: Int64 = 0
+    @Published var memCached:     Int64 = 0
+
+    // Network context
+    @Published var ipAddress:   String = "—"
+    @Published var netLinkType: String = ""   // "Wi-Fi", "Ethernet", …
+    @Published var ssid:        String = ""   // Wi-Fi network name (needs Location permission)
+    @Published var wifiRSSI:    Int    = 0    // dBm; 0 = unknown
+
+    // System
+    @Published var uptime:  TimeInterval = 0
+    @Published var loadAvg: [Double]     = [0, 0, 0]   // 1, 5, 15 min
 
     // Network
     @Published var netInBps:    Int64   = 0
@@ -60,6 +79,11 @@ class SystemStatsModel: ObservableObject {
     // Disk
     @Published var diskReadKBs: Double  = 0
     @Published var diskWriteKBs:Double  = 0
+
+    // Disk space (boot volume)
+    @Published var diskSpaceUsed:  Int64 = 0
+    @Published var diskSpaceTotal: Int64 = 0
+    @Published var diskSpacePct:   Int   = 0
 
     // Battery — every field
     @Published var batteryPct:       Int     = 0
@@ -113,6 +137,21 @@ class SystemStatsModel: ObservableObject {
     private let helperPath = "/Users/Shared/MacMonitor/macmonitor-helper"
     private let helperSudoersPath = "/etc/sudoers.d/macmonitor-helper"
     private var helperBootstrapInFlight = false
+    private var currentInterval: TimeInterval = 2.0
+
+    // MARK: - Settings-backed values
+
+    // Main tick interval (seconds). Settable in the Settings screen; default 2 s.
+    static func currentRefreshInterval() -> TimeInterval {
+        let v = UserDefaults.standard.integer(forKey: "refreshInterval")
+        return v > 0 ? TimeInterval(v) : 2.0
+    }
+
+    // How many processes the Top Processes list shows. Default 8.
+    static func currentTopProcCount() -> Int {
+        let v = UserDefaults.standard.integer(forKey: "topProcCount")
+        return v > 0 ? v : 8
+    }
 
     // MARK: - Start
 
@@ -121,10 +160,16 @@ class SystemStatsModel: ObservableObject {
         _ = sampleCPU()      // fast Mach call — OK on main thread
         prevTickTime = Date()
 
-        // Start main 2-second tick timer immediately — app is responsive at launch.
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // Start main tick timer immediately — app is responsive at launch.
+        currentInterval = Self.currentRefreshInterval()
+        timer = Timer.scheduledTimer(withTimeInterval: currentInterval, repeats: true) { [weak self] _ in
             self?.tick()
         }
+
+        // Restart the tick timer when the user changes the refresh interval.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(defaultsChanged),
+            name: UserDefaults.didChangeNotification, object: nil)
 
         // Disk I/O is sampled via ioreg which can take 1-5+ seconds.
         // Run it on its own independent timer so it NEVER blocks samplerQueue.
@@ -145,6 +190,20 @@ class SystemStatsModel: ObservableObject {
         fetchBattery()
     }
 
+    // Reconfigure the tick timer when the refresh interval setting changes.
+    @objc private func defaultsChanged() {
+        let desired = Self.currentRefreshInterval()
+        guard desired != currentInterval else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, desired != self.currentInterval else { return }
+            self.currentInterval = desired
+            self.timer?.invalidate()
+            self.timer = Timer.scheduledTimer(withTimeInterval: desired, repeats: true) { [weak self] _ in
+                self?.tick()
+            }
+        }
+    }
+
     // MARK: - Tick
 
     private func tick() {
@@ -158,9 +217,12 @@ class SystemStatsModel: ObservableObject {
             }
 
             let (cpu, cores) = self.sampleCPU()
-            let (mUsed, mTot) = self.sampleMemory()
+            let mem           = self.sampleMemory()
             let (sUsed, sTot) = self.sampleSwap()
+            let (dUsed, dTot) = self.sampleDiskSpace()
             let (ni, no)      = self.netCumulative()
+            let (pressure, up, load) = self.sampleSystem()
+            let (ip, link, ssid, rssi) = self.sampleNetworkContext()
 
             let dt     = max(Date().timeIntervalSince(self.prevTickTime), 0.001)
             // Guard against first tick where prevNetIn is 0 (unseeded).
@@ -183,13 +245,27 @@ class SystemStatsModel: ObservableObject {
                 guard let self = self else { return }
                 self.cpuUsage    = Int(cpu.rounded())
                 self.perCoreCPU  = cores
-                self.memUsed     = mUsed
-                self.memTotal    = mTot
-                self.memPct      = mTot > 0 ? Int(mUsed * 100 / mTot) : 0
+                self.memUsed     = mem.used
+                self.memTotal    = mem.total
+                self.memPct      = mem.total > 0 ? Int(mem.used * 100 / mem.total) : 0
+                self.memApp        = mem.app
+                self.memWired      = mem.wired
+                self.memCompressed = mem.compressed
+                self.memCached     = mem.cached
                 self.swapUsed    = sUsed
                 self.swapTotal   = sTot
+                self.diskSpaceUsed  = dUsed
+                self.diskSpaceTotal = dTot
+                self.diskSpacePct   = dTot > 0 ? Int(dUsed * 100 / dTot) : 0
                 self.netInBps    = max(0, inBps)
                 self.netOutBps   = max(0, outBps)
+                self.memPressureLevel = pressure
+                self.uptime      = up
+                self.loadAvg     = load
+                self.ipAddress   = ip
+                self.netLinkType = link
+                self.ssid        = ssid
+                self.wifiRSSI    = rssi
                 self.thermalState = Self.currentThermalState()
             }
 
@@ -276,7 +352,8 @@ class SystemStatsModel: ObservableObject {
 
     // MARK: - Memory (Mach kernel)
 
-    private func sampleMemory() -> (used: Int64, total: Int64) {
+    private func sampleMemory()
+        -> (used: Int64, total: Int64, app: Int64, wired: Int64, compressed: Int64, cached: Int64) {
         var stats = vm_statistics64_data_t()
         var count = mach_msg_type_number_t(
             MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
@@ -286,11 +363,19 @@ class SystemStatsModel: ObservableObject {
             }
         }
         let total = Int64(ProcessInfo.processInfo.physicalMemory)
-        guard kr == KERN_SUCCESS else { return (0, total) }
+        guard kr == KERN_SUCCESS else { return (0, total, 0, 0, 0, 0) }
         let page  = Int64(vm_kernel_page_size)
         let used  = (Int64(stats.active_count) + Int64(stats.wire_count)
                    + Int64(stats.compressor_page_count)) * page
-        return (min(max(used, 0), total), total)
+        // Activity Monitor style breakdown:
+        // App     = anonymous (internal) pages minus purgeable
+        // Cached  = file-backed (external) + purgeable pages
+        let wired      = Int64(stats.wire_count)            * page
+        let compressed = Int64(stats.compressor_page_count) * page
+        let purgeable  = Int64(stats.purgeable_count)
+        let app    = max(0, Int64(stats.internal_page_count) - purgeable) * page
+        let cached = (Int64(stats.external_page_count) + purgeable)       * page
+        return (min(max(used, 0), total), total, app, wired, compressed, cached)
     }
 
     private func sampleSwap() -> (used: Int64, total: Int64) {
@@ -298,6 +383,82 @@ class SystemStatsModel: ObservableObject {
         let total = Self.firstSizeMatch(in: output, pattern: #"total = ([0-9.]+[KMGTP]i?)"#)
         let used = Self.firstSizeMatch(in: output, pattern: #"used = ([0-9.]+[KMGTP]i?)"#)
         return (used, total)
+    }
+
+    // MARK: - Disk space (boot volume)
+
+    private func sampleDiskSpace() -> (used: Int64, total: Int64) {
+        let url = URL(fileURLWithPath: "/")
+        guard let values = try? url.resourceValues(forKeys: [
+                .volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey]),
+              let total = values.volumeTotalCapacity else { return (0, 0) }
+        let available = values.volumeAvailableCapacityForImportantUsage ?? 0
+        let used = max(0, Int64(total) - available)
+        return (used, Int64(total))
+    }
+
+    // MARK: - System (pressure, uptime, load average)
+
+    private func sampleSystem() -> (pressure: Int, uptime: TimeInterval, load: [Double]) {
+        // Memory pressure: 1 = Normal, 2 = Warning, 4 = Critical (kernel level).
+        let level = Self.sysctlInt("kern.memorystatus_vm_pressure_level")
+        let up    = ProcessInfo.processInfo.systemUptime
+        var raw   = [Double](repeating: 0, count: 3)
+        getloadavg(&raw, 3)
+        return (level > 0 ? level : 1, up, raw)
+    }
+
+    // MARK: - Network context (primary interface IP + link type)
+
+    private func sampleNetworkContext() -> (ip: String, link: String, ssid: String, rssi: Int) {
+        // Primary interface = the one carrying the default IPv4 route.
+        guard let store = SCDynamicStoreCreate(nil, "rybo.Macmonitor" as CFString, nil, nil),
+              let global = SCDynamicStoreCopyValue(store, "State:/Network/Global/IPv4" as CFString) as? [String: Any],
+              let bsd = global["PrimaryInterface"] as? String
+        else { return ("—", "", "", 0) }
+
+        let ip = Self.ipv4Address(for: bsd) ?? "—"
+
+        // Map the BSD name to a human link type via SystemConfiguration.
+        var link = bsd
+        if let ifaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface] {
+            for iface in ifaces where (SCNetworkInterfaceGetBSDName(iface) as String?) == bsd {
+                let type = SCNetworkInterfaceGetInterfaceType(iface) as String?
+                if type == (kSCNetworkInterfaceTypeIEEE80211 as String) {
+                    link = "Wi-Fi"
+                } else if type == (kSCNetworkInterfaceTypeEthernet as String) {
+                    link = "Ethernet"
+                }
+                break
+            }
+        }
+
+        // SSID + signal only when Wi-Fi is the active link.
+        var ssid = ""
+        var rssi = 0
+        if link == "Wi-Fi", let wifi = CWWiFiClient.shared().interface() {
+            ssid = wifi.ssid() ?? ""
+            rssi = wifi.rssiValue()
+        }
+        return (ip, link, ssid, rssi)
+    }
+
+    private static func ipv4Address(for bsd: String) -> String? {
+        var addrs: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&addrs) == 0, let first = addrs else { return nil }
+        defer { freeifaddrs(addrs) }
+        var ptr: UnsafeMutablePointer<ifaddrs>? = first
+        while let cur = ptr {
+            defer { ptr = cur.pointee.ifa_next }
+            guard let sa = cur.pointee.ifa_addr, sa.pointee.sa_family == sa_family_t(AF_INET),
+                  String(cString: cur.pointee.ifa_name) == bsd else { continue }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            if getnameinfo(sa, socklen_t(sa.pointee.sa_len), &host, socklen_t(host.count),
+                           nil, 0, NI_NUMERICHOST) == 0 {
+                return String(cString: host)
+            }
+        }
+        return nil
     }
 
     // MARK: - Network cumulative
@@ -467,11 +628,13 @@ class SystemStatsModel: ObservableObject {
     }
 
     private func sampleTopProcesses() -> [ProcInfo] {
+        let limit = Self.currentTopProcCount()
         let out = shell("/bin/ps", ["-axo", "%cpu,rss,pid,comm", "-r"])
         var results: [ProcInfo] = []
         let lines = out.split(separator: "\n").dropFirst() // Skip header
-        
-        for line in lines.prefix(12) {
+
+        // Scan a few extra rows so filtered entries (kernel_task, self) don't shrink the list.
+        for line in lines.prefix(limit + 4) {
             let parts = line.split(separator: " ", maxSplits: 3, omittingEmptySubsequences: true)
             guard parts.count >= 4 else { continue }
             
@@ -490,7 +653,7 @@ class SystemStatsModel: ObservableObject {
                 mem: rssKB * 1024
             ))
         }
-        return Array(results.prefix(8))
+        return Array(results.prefix(limit))
     }
 
     private func fetchHelperMetrics() -> IOReportData? {
@@ -852,4 +1015,16 @@ private extension SystemStatsModel {
         default: return Int64(Double(token) ?? 0)
         }
     }
+}
+
+// MARK: - Temperature formatting (shared)
+
+/// Formats a Celsius value honoring the "tempUnit" setting ("C" or "F").
+/// Read at call time so it follows the setting without extra wiring; views
+/// refresh on the next sampling tick.
+func formatTemp(_ celsius: Double, decimals: Int = 0) -> String {
+    let fahrenheit = UserDefaults.standard.string(forKey: "tempUnit") == "F"
+    let value = fahrenheit ? celsius * 9.0 / 5.0 + 32.0 : celsius
+    let unit  = fahrenheit ? "°F" : "°C"
+    return String(format: "%.\(decimals)f\(unit)", value)
 }

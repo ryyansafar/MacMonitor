@@ -8,17 +8,62 @@
 
 /* Begin PBXBuildFile section */
 		606C7E022F77A8C500F11BF3 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 606C7E032F77A8C500F11BF3 /* IOKit.framework */; };
+		D1D1D1D1D1D1D1D1D100000B /* MacMonitorWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D1D1D1D1D1D1D1D1D1000002 /* MacMonitorWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D1D1D1D1D1D1D1D1D100000D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 606C7DEC2F77A8C200F11BF3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1D1D1D1D1D1D1D1D1000001;
+			remoteInfo = MacMonitorWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1D1D1D1D1D1D1D1D100000A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D1D1D1D1D1D1D1D1D100000B /* MacMonitorWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		606C7DF42F77A8C200F11BF3 /* Macmonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Macmonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		606C7E032F77A8C500F11BF3 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		D1D1D1D1D1D1D1D1D1000002 /* MacMonitorWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MacMonitorWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D1D1D1D1D1D1D1D1D100000E /* Exceptions for "MacMonitorWidget" folder in "MacMonitorWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				MacMonitorWidget.entitlements,
+			);
+			target = D1D1D1D1D1D1D1D1D1000001 /* MacMonitorWidget */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		606C7DF62F77A8C200F11BF3 /* Macmonitor */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Macmonitor;
+			sourceTree = "<group>";
+		};
+		D1D1D1D1D1D1D1D1D1000003 /* MacMonitorWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D1D1D1D1D1D1D1D1D100000E /* Exceptions for "MacMonitorWidget" folder in "MacMonitorWidget" target */,
+			);
+			path = MacMonitorWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +77,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1D1D1D1D1D1D1D1D1000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -39,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				606C7DF62F77A8C200F11BF3 /* Macmonitor */,
+				D1D1D1D1D1D1D1D1D1000003 /* MacMonitorWidget */,
 				606C7DF52F77A8C200F11BF3 /* Products */,
 				606C7E042F77A8C500F11BF3 /* Frameworks */,
 			);
@@ -48,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				606C7DF42F77A8C200F11BF3 /* Macmonitor.app */,
+				D1D1D1D1D1D1D1D1D1000002 /* MacMonitorWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,10 +124,12 @@
 				606C7DF02F77A8C200F11BF3 /* Sources */,
 				606C7DF12F77A8C200F11BF3 /* Frameworks */,
 				606C7DF22F77A8C200F11BF3 /* Resources */,
+				D1D1D1D1D1D1D1D1D100000A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1D1D1D1D1D1D1D1D100000C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				606C7DF62F77A8C200F11BF3 /* Macmonitor */,
@@ -84,6 +140,28 @@
 			productName = Macmonitor;
 			productReference = 606C7DF42F77A8C200F11BF3 /* Macmonitor.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D1D1D1D1D1D1D1D1D1000001 /* MacMonitorWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1D1D1D1D1D1D1D1D1000007 /* Build configuration list for PBXNativeTarget "MacMonitorWidget" */;
+			buildPhases = (
+				D1D1D1D1D1D1D1D1D1000004 /* Sources */,
+				D1D1D1D1D1D1D1D1D1000005 /* Frameworks */,
+				D1D1D1D1D1D1D1D1D1000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D1D1D1D1D1D1D1D1D1000003 /* MacMonitorWidget */,
+			);
+			name = MacMonitorWidget;
+			packageProductDependencies = (
+			);
+			productName = MacMonitorWidget;
+			productReference = D1D1D1D1D1D1D1D1D1000002 /* MacMonitorWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,6 +174,9 @@
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					606C7DF32F77A8C200F11BF3 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					D1D1D1D1D1D1D1D1D1000001 = {
 						CreatedOnToolsVersion = 26.4;
 					};
 				};
@@ -115,12 +196,20 @@
 			projectRoot = "";
 			targets = (
 				606C7DF32F77A8C200F11BF3 /* Macmonitor */,
+				D1D1D1D1D1D1D1D1D1000001 /* MacMonitorWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		606C7DF22F77A8C200F11BF3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1D1D1D1D1D1D1D1D1000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -137,7 +226,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1D1D1D1D1D1D1D1D1000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D1D1D1D1D1D1D1D1D100000C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1D1D1D1D1D1D1D1D1000001 /* MacMonitorWidget */;
+			targetProxy = D1D1D1D1D1D1D1D1D100000D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		606C7DFD2F77A8C400F11BF3 /* Debug */ = {
@@ -275,6 +379,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSLocationUsageDescription = "MacMonitor reads your current Wi-Fi network name and signal strength to show them on the dashboard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MacMonitor reads your current Wi-Fi network name and signal strength to show them on the dashboard.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -312,6 +418,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSLocationUsageDescription = "MacMonitor reads your current Wi-Fi network name and signal strength to show them on the dashboard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MacMonitor reads your current Wi-Fi network name and signal strength to show them on the dashboard.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -334,6 +442,54 @@
 			};
 			name = Release;
 		};
+		D1D1D1D1D1D1D1D1D1000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MacMonitorWidget/MacMonitorWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = V87HF4H3X9;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MacMonitorWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = rybo.Macmonitor.MacMonitorWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D1D1D1D1D1D1D1D1D1000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MacMonitorWidget/MacMonitorWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = V87HF4H3X9;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MacMonitorWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = rybo.Macmonitor.MacMonitorWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -351,6 +507,15 @@
 			buildConfigurations = (
 				606C7E002F77A8C400F11BF3 /* Debug */,
 				606C7E012F77A8C400F11BF3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1D1D1D1D1D1D1D1D1000007 /* Build configuration list for PBXNativeTarget "MacMonitorWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1D1D1D1D1D1D1D1D1000008 /* Debug */,
+				D1D1D1D1D1D1D1D1D1000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
