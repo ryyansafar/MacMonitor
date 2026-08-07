@@ -106,6 +106,7 @@ class SystemStatsModel: ObservableObject {
     private var diskSeeded            = false  // true after first diskCumulative sample
     private var diskInFlight          = false  // prevent concurrent ioreg calls piling up
     private var prevTickTime: Date  = Date()
+    private var prevDiskTickTime: Date?          // nil on first tickDisk → dt defaults to 6.0
     private var batterySampleCountdown    = 0
     private var timer: Timer?
     private var diskTimer: Timer?          // independent timer — keeps ioreg off samplerQueue
@@ -214,12 +215,19 @@ class SystemStatsModel: ObservableObject {
         let seeded    = diskSeeded
         diskSeeded = true   // mark seeded so next call computes a delta
 
+        // Measure the real interval between disk samples (matches the network
+        // path at tick()). ioreg latency and sleep/wake stretch the gap beyond
+        // the 6 s timer interval, so dividing by a fixed 6.0 overstates the rate.
+        let now = Date()
+        let dt  = prevDiskTickTime.map { max(now.timeIntervalSince($0), 0.001) } ?? 6.0
+        prevDiskTickTime = now
+
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
             let (readBytes, writeBytes) = self.diskCumulative()
             // First call seeds baseline — show 0 so we don't display boot-time totals.
-            let readKBs  = seeded ? max(0, Double(readBytes  - prevRead)  / 6.0 / 1024.0) : 0
-            let writeKBs = seeded ? max(0, Double(writeBytes - prevWrite) / 6.0 / 1024.0) : 0
+            let readKBs  = seeded ? max(0, Double(readBytes  - prevRead)  / dt / 1024.0) : 0
+            let writeKBs = seeded ? max(0, Double(writeBytes - prevWrite) / dt / 1024.0) : 0
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.prevDiskReadBytes  = readBytes
