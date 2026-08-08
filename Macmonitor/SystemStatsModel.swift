@@ -387,10 +387,10 @@ class SystemStatsModel: ObservableObject {
             let rawTemp = ioInt("Temperature")           // in 0.01°C
             let battTemp = Double(rawTemp) / 100.0
 
-            // Charging current (mA) × voltage (mV) → watts
-            let voltage    = Double(ioInt("Voltage")) / 1000.0        // V
-            let amperage   = abs(Double(ioInt("Amperage"))) / 1000.0  // A
-            let chrgWatts  = voltage * amperage
+            // Charge rate is meaningful only while charging; the helper gates on `charging`.
+            let chrgWatts = Self.chargeWatts(voltageMV: ioInt("Voltage"),
+                                             amperageMA: ioInt("Amperage"),
+                                             charging: charging)
 
             let health = desCap > 0 ? Int(Double(maxCapMAh) / Double(desCap) * 100) : 100
 
@@ -732,6 +732,15 @@ private extension SystemStatsModel {
         case .critical: return "Critical"
         @unknown default: return "Normal"
         }
+    }
+
+    /// Battery charge wattage; 0 unless `charging`, so the "Charge rate" row
+    /// reads "—" while discharging, idle, or fully charged.
+    static func chargeWatts(voltageMV: Int, amperageMA: Int, charging: Bool) -> Double {
+        guard charging else { return 0 }
+        let amps  = Double(amperageMA) / 1000.0
+        let volts = Double(voltageMV) / 1000.0
+        return max(0, volts * amps)
     }
 
     static func sysctlString(_ name: String) -> String? {
