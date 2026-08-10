@@ -83,7 +83,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem?.button {
-            btn.title  = "🟢 CPU --%  MEM --%"
+            btn.image = createCircleImage(color: .systemGreen)
+            btn.title = ""
             btn.toolTip = "MacMonitor"
             btn.target = self
             btn.action = #selector(handleClick)
@@ -99,18 +100,47 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         )
     }
 
+    private func createCircleImage(color: NSColor, size: CGFloat = 10.0) -> NSImage {
+        let imageSize = CGFloat(22)
+        let image = NSImage(size: NSSize(width: imageSize, height: imageSize))
+        image.lockFocus()
+        color.set()
+        let rect = NSRect(
+            x: (imageSize - size) / 2,
+            y: (imageSize - size) / 2,
+            width: size,
+            height: size
+        )
+        NSBezierPath(ovalIn: rect).fill()
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
+    }
+
     private func updateLabel(cpu: Int, mem: Int, temp: Double) {
         guard let btn = statusItem?.button else { return }
         if isCPUOnlyMenuBar {
+            btn.image = nil
             btn.title = "\(cpu)%"
             btn.toolTip = "CPU usage: \(cpu)%"
             return
         }
-        btn.toolTip = "MacMonitor"
-        let dot = cpu >= 85 || mem >= 85 ? "🔴"
-                : cpu >= 60 || mem >= 60 ? "🟡" : "🟢"
-        let tempStr = temp > 0 ? String(format: " %.0f°", temp) : ""
-        btn.title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
+
+        let color: NSColor
+        if cpu >= 85 || mem >= 85 {
+            color = .systemRed
+        } else if cpu >= 60 || mem >= 60 {
+            color = .systemYellow
+        } else {
+            color = .systemGreen
+        }
+
+        btn.image = createCircleImage(color: color)
+        btn.title = ""
+        btn.attributedTitle = NSAttributedString(string: "")
+
+        let tempStr = temp > 0 ? String(format: " %.0f°C", temp) : ""
+        btn.toolTip = "CPU: \(cpu)%\(tempStr)\nMEM: \(mem)%"
     }
 
     // MARK: - Click handling
