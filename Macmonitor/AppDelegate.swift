@@ -27,11 +27,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     private var isCPUOnlyMenuBar = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
         UserDefaults.standard.register(defaults: [
             "cpuOnlyMenuBar": false,
-            "appTheme": AppTheme.automatic.rawValue
+            "appTheme": AppTheme.automatic.rawValue,
+            "showDockIcon": false
         ])
+        NSApp.setActivationPolicy(
+            UserDefaults.standard.bool(forKey: "showDockIcon") ? .regular : .accessory)
         isCPUOnlyMenuBar = UserDefaults.standard.bool(forKey: "cpuOnlyMenuBar")
 
         setupMenuBar()
@@ -128,7 +130,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            if let win = popover.contentViewController?.view.window {
+                // Allow the dashboard to appear over another app's fullscreen Space
+                // when the optional Dock icon changes this app to regular mode.
+                win.collectionBehavior.insert(.canJoinAllSpaces)
+                win.collectionBehavior.insert(.fullScreenAuxiliary)
+                win.makeKey()
+            }
             beginTrackingAnchor(sender)
         }
     }
@@ -331,7 +339,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         }
 
         let win = NSWindow(
-            contentRect:  NSRect(x: 0, y: 0, width: 360, height: 460),
+            contentRect:  NSRect(x: 0, y: 0, width: 320, height: 560),
             styleMask:    [.titled, .closable, .fullSizeContentView],
             backing:      .buffered,
             defer:        false
