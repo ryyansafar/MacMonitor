@@ -701,9 +701,13 @@ static BOOL gAmcStatsProducesData = NO;
         double hotspot = SMCGetFloatValue(smcConn, "TCMz");
         data.cpuDieHotspot = (hotspot > 10.0 && hotspot < 150.0) ? hotspot : data.cpuTemp;
 
-        // Fan speed — F0Ac = Fan 0 Actual RPM.
-        // Returns 0 on fanless models (e.g. MacBook Air). Check F1Ac for a second fan
-        // if the hardware has dual fans (Mac Pro / Mac Studio / MacBook Pro 16").
+        // Fan presence and speed. A fan-bearing Mac can report 0 RPM while idle,
+        // so FNum—not F0Ac—is the capability check used by the UI.
+        double fans = SMCGetFloatValue(smcConn, "FNum");
+        if (fans <= 0 && SMCGetFloatValue(smcConn, "F0Mx") > 0) {
+            fans = 1;
+        }
+        data.fanCount = (fans > 0 && fans <= 8) ? (int32_t)fans : 0;
         double fan0 = SMCGetFloatValue(smcConn, "F0Ac");
         data.fanRPM = (fan0 > 0) ? (int32_t)fan0 : 0;
     }

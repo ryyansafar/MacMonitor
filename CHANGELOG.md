@@ -7,6 +7,21 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ---
 
+## Unreleased
+
+### Added
+
+- **Safe fan control** — Macs with fans can explicitly request Max Cooling or return
+  control to macOS. Max Cooling uses each fan's hardware-reported maximum, controls all
+  detected fans together, rejects arbitrary low RPM values, rolls back on partial failure,
+  and restores automatic control on a normal app quit.
+
+### Security
+
+- The app now refuses to invoke a privileged helper unless both the executable and its
+  parent directory are root-owned and not group/other-writable. Its sudoers entry allows
+  only read-only sampling, Max Cooling, and Automatic commands with exact arguments.
+
 ## [2.0.5] — 2026-08-06
 
 ### The "Widget Actually Exists" Release

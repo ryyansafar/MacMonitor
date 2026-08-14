@@ -1,7 +1,13 @@
 // smc.c
 #include "SMC.h"
+#include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#define SMC_TYPE(a, b, c, d)                                                   \
+  (((unsigned int)(a) << 24) | ((unsigned int)(b) << 16) |                    \
+   ((unsigned int)(c) << 8) | (unsigned int)(d))
 
 io_connect_t SMCOpen(void) {
   kern_return_t result;
@@ -88,20 +94,125 @@ double SMCGetFloatValue(io_connect_t conn, const char *key) {
     return 0.0;
   }
 
-  // flt  (0x666C7420) — IEEE 754 float, used for power/fan keys
-  if (val.keyInfo.dataType == 1718383648) {
-    float f;
-    memcpy(&f, val.bytes, 4);
-    return (double)f;
+  bool supported = false;
+  double value = SMCDecodeNumericValue(&val, &supported);
+  return supported ? value : 0.0;
+}
+
+double SMCDecodeNumericValue(const SMCKeyData_t *value, bool *supported) {
+  if (supported != NULL) {
+    *supported = true;
   }
 
-  // sp78 (0x73703738) — signed fixed-point 7.8, used for Apple Silicon temperature sensors
-  if (val.keyInfo.dataType == 1936734008) {
-    int16_t raw = (int16_t)(((unsigned char)val.bytes[0] << 8) | (unsigned char)val.bytes[1]);
+  switch (value->keyInfo.dataType) {
+  case SMC_TYPE('f', 'l', 't', ' '): {
+    if (value->keyInfo.dataSize < sizeof(float)) {
+      break;
+    }
+    float decoded;
+    memcpy(&decoded, value->bytes, sizeof(decoded));
+    return (double)decoded;
+  }
+  case SMC_TYPE('s', 'p', '7', '8'): {
+    if (value->keyInfo.dataSize < 2) {
+      break;
+    }
+    int16_t raw = (int16_t)(((uint8_t)value->bytes[0] << 8) |
+                            (uint8_t)value->bytes[1]);
     return (double)raw / 256.0;
   }
+  case SMC_TYPE('f', 'p', 'e', '2'): {
+    if (value->keyInfo.dataSize < 2) {
+      break;
+    }
+    uint16_t raw = (uint16_t)(((uint8_t)value->bytes[0] << 8) |
+                              (uint8_t)value->bytes[1]);
+    return (double)raw / 4.0;
+  }
+  case SMC_TYPE('u', 'i', '8', ' '):
+    if (value->keyInfo.dataSize >= 1) {
+      return (uint8_t)value->bytes[0];
+    }
+    break;
+  case SMC_TYPE('u', 'i', '1', '6'):
+    if (value->keyInfo.dataSize >= 2) {
+      return (double)(((uint8_t)value->bytes[0] << 8) |
+                      (uint8_t)value->bytes[1]);
+    }
+    break;
+  case SMC_TYPE('u', 'i', '3', '2'):
+    if (value->keyInfo.dataSize >= 4) {
+      return (double)(((uint32_t)(uint8_t)value->bytes[0] << 24) |
+                      ((uint32_t)(uint8_t)value->bytes[1] << 16) |
+                      ((uint32_t)(uint8_t)value->bytes[2] << 8) |
+                      (uint8_t)value->bytes[3]);
+    }
+    break;
+  default:
+    break;
+  }
 
+  if (supported != NULL) {
+    *supported = false;
+  }
   return 0.0;
+}
+
+kern_return_t SMCEncodeNumericValue(const SMCKeyData_keyInfo_t *keyInfo,
+                                    double value, SMCBytes_t bytes) {
+  if (keyInfo == NULL || bytes == NULL || keyInfo->dataSize > sizeof(SMCBytes_t) ||
+      !isfinite(value) || value < 0) {
+    return kIOReturnBadArgument;
+  }
+
+  memset(bytes, 0, sizeof(SMCBytes_t));
+  switch (keyInfo->dataType) {
+  case SMC_TYPE('f', 'l', 't', ' '): {
+    if (keyInfo->dataSize < sizeof(float)) {
+      return kIOReturnBadArgument;
+    }
+    float encoded = (float)value;
+    memcpy(bytes, &encoded, sizeof(encoded));
+    return kIOReturnSuccess;
+  }
+  case SMC_TYPE('f', 'p', 'e', '2'): {
+    if (keyInfo->dataSize < 2 || value > 16383.75) {
+      return kIOReturnBadArgument;
+    }
+    uint16_t raw = (uint16_t)llround(value * 4.0);
+    bytes[0] = (char)(raw >> 8);
+    bytes[1] = (char)(raw & 0xff);
+    return kIOReturnSuccess;
+  }
+  case SMC_TYPE('u', 'i', '8', ' '):
+    if (keyInfo->dataSize < 1 || value > UINT8_MAX) {
+      return kIOReturnBadArgument;
+    }
+    bytes[0] = (char)llround(value);
+    return kIOReturnSuccess;
+  case SMC_TYPE('u', 'i', '1', '6'): {
+    if (keyInfo->dataSize < 2 || value > UINT16_MAX) {
+      return kIOReturnBadArgument;
+    }
+    uint16_t raw = (uint16_t)llround(value);
+    bytes[0] = (char)(raw >> 8);
+    bytes[1] = (char)(raw & 0xff);
+    return kIOReturnSuccess;
+  }
+  case SMC_TYPE('u', 'i', '3', '2'): {
+    if (keyInfo->dataSize < 4 || value > UINT32_MAX) {
+      return kIOReturnBadArgument;
+    }
+    uint32_t raw = (uint32_t)llround(value);
+    bytes[0] = (char)(raw >> 24);
+    bytes[1] = (char)((raw >> 16) & 0xff);
+    bytes[2] = (char)((raw >> 8) & 0xff);
+    bytes[3] = (char)(raw & 0xff);
+    return kIOReturnSuccess;
+  }
+  default:
+    return kIOReturnUnsupported;
+  }
 }
 
 int SMCGetKeyCount(io_connect_t conn) {
@@ -171,6 +282,9 @@ kern_return_t SMCGetKeyInfo(io_connect_t conn, const char *key,
 kern_return_t SMCWriteKey(io_connect_t conn, const char *key,
                           unsigned int dataType, SMCBytes_t bytes,
                           unsigned int dataSize) {
+  if (dataSize == 0 || dataSize > sizeof(SMCBytes_t)) {
+    return kIOReturnBadArgument;
+  }
   kern_return_t result;
   SMCKeyData_t inputStructure;
   SMCKeyData_t outputStructure;
@@ -189,16 +303,25 @@ kern_return_t SMCWriteKey(io_connect_t conn, const char *key,
 }
 
 kern_return_t SMCSetFloat(io_connect_t conn, const char *key, float value) {
-  // First read the key info to get the correct data type and size
+  return SMCSetNumericValue(conn, key, value);
+}
+
+kern_return_t SMCSetNumericValue(io_connect_t conn, const char *key,
+                                 double value) {
   SMCKeyData_keyInfo_t keyInfo;
   kern_return_t result = SMCGetKeyInfo(conn, key, &keyInfo);
   if (result != kIOReturnSuccess) {
     return result;
   }
+  if (keyInfo.dataSize == 0) {
+    return kIOReturnNotFound;
+  }
 
   SMCBytes_t bytes;
-  memset(bytes, 0, sizeof(bytes));
-  memcpy(bytes, &value, sizeof(float));
+  result = SMCEncodeNumericValue(&keyInfo, value, bytes);
+  if (result != kIOReturnSuccess) {
+    return result;
+  }
 
   return SMCWriteKey(conn, key, keyInfo.dataType, bytes, keyInfo.dataSize);
 }

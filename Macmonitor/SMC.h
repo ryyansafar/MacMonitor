@@ -3,6 +3,7 @@
 #define SMC_H
 
 #include <IOKit/IOKitLib.h>
+#include <stdbool.h>
 
 #define KERNEL_INDEX_SMC 2
 
@@ -69,5 +70,10 @@ kern_return_t SMCWriteKey(io_connect_t conn, const char *key,
                           unsigned int dataType, SMCBytes_t bytes,
                           unsigned int dataSize);
 kern_return_t SMCSetFloat(io_connect_t conn, const char *key, float value);
+double SMCDecodeNumericValue(const SMCKeyData_t *value, bool *supported);
+kern_return_t SMCEncodeNumericValue(const SMCKeyData_keyInfo_t *keyInfo,
+                                    double value, SMCBytes_t bytes);
+kern_return_t SMCSetNumericValue(io_connect_t conn, const char *key,
+                                 double value);
 
 #endif

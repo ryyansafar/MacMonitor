@@ -36,7 +36,7 @@ struct PopoverView: View {
                 CPUSection(model: model)
                 sep
                 GPUSection(model: model)
-                if model.fanRPM > 0 {
+                if model.fanCount > 0 {
                     sep
                     FanSection(model: model)
                 }
@@ -203,6 +203,8 @@ private struct CPUSection: View {
 
 private struct FanSection: View {
     @ObservedObject var model: SystemStatsModel
+    @State private var confirmMaximum = false
+
     var body: some View {
         SectionBox(icon: "fan", title: "Fan") {
             Row(label: "Speed") {
@@ -213,6 +215,53 @@ private struct FanSection: View {
                     Spacer()
                 }
             }
+
+            HStack(spacing: 8) {
+                Button("Automatic") {
+                    model.setFanControlMode(.automatic)
+                }
+                .disabled(model.fanControlBusy || model.fanControlMode == .automatic)
+
+                Button("Max Cooling") {
+                    confirmMaximum = true
+                }
+                .disabled(model.fanControlBusy || model.fanControlMode == .maximum)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            HStack(spacing: 5) {
+                if model.fanControlBusy {
+                    ProgressView().controlSize(.small)
+                    Text("Applying…")
+                } else {
+                    Text(fanModeLabel)
+                }
+                Spacer()
+            }
+            .font(.system(size: 9))
+            .foregroundColor(.secondary)
+
+            if let error = model.fanControlError {
+                Text(error)
+                    .font(.system(size: 9))
+                    .foregroundColor(Color(hex: "FF453A"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .alert("Run all fans at maximum speed?", isPresented: $confirmMaximum) {
+            Button("Cancel", role: .cancel) {}
+            Button("Max Cooling") { model.setFanControlMode(.maximum) }
+        } message: {
+            Text("This can be noisy. MacMonitor only requests each fan's hardware-reported maximum and restores automatic control when you switch back or quit normally.")
+        }
+    }
+
+    private var fanModeLabel: String {
+        switch model.fanControlMode {
+        case .maximum: return "Maximum requested"
+        case .automatic: return "macOS automatic control"
+        case nil: return "Mode not changed by MacMonitor"
         }
     }
 }

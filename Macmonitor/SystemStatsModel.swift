@@ -83,8 +83,12 @@ class SystemStatsModel: ObservableObject {
     @Published var pCoreCount:   Int    = 0
     @Published var gpuCoreCount: Int    = 0
 
-    // Fan (0 = fanless model, e.g. MacBook Air)
+    // Fan (fanCount = 0 on fanless models, e.g. MacBook Air)
+    @Published var fanCount:     Int    = 0
     @Published var fanRPM:       Int    = 0
+    @Published var fanControlMode: FanControlMode?
+    @Published var fanControlBusy = false
+    @Published var fanControlError: String?
 
     // CPU die hotspot — TCMz, the absolute peak temperature on the CPU die.
     // This is the value TG Pro shows as "CPU Die (Hotspot)".
@@ -112,6 +116,7 @@ class SystemStatsModel: ObservableObject {
     private let samplerQueue = DispatchQueue(label: "rybo.Macmonitor.sampler", qos: .utility)
     private let helperPath = "/Users/Shared/MacMonitor/macmonitor-helper"
     private let helperSudoersPath = "/etc/sudoers.d/macmonitor-helper"
+    private let helperSudoersVersionKey = "helperSudoersArgumentsV2"
     private var helperBootstrapInFlight = false
 
     // MARK: - Start
@@ -435,6 +440,7 @@ class SystemStatsModel: ObservableObject {
                 self.cpuTemp        = pData.cpuTemp > 0        ? pData.cpuTemp        : self.cpuTemp
                 self.cpuDieHotspot  = pData.cpuDieHotspot > 0  ? pData.cpuDieHotspot  : self.cpuDieHotspot
                 self.gpuTemp        = pData.gpuTemp > 0        ? pData.gpuTemp        : self.gpuTemp
+                self.fanCount       = Int(pData.fanCount)
                 self.fanRPM         = Int(pData.fanRPM)
                 
                 self.cpuPower  = pData.cpuPower
@@ -502,7 +508,7 @@ class SystemStatsModel: ObservableObject {
         // Fall back to sudo -n (requires a pre-installed sudoers entry) if direct fails.
         var helperResult = shellResult(helperPath, [])
         fputs("[helper] direct status=\(helperResult.status) outLen=\(helperResult.stdout.count) err=\(helperResult.stderr)\n", stderr)
-        if helperResult.status != 0 {
+        if helperResult.status != 0, helperHasSafeOwnership() {
             helperResult = shellResult("/usr/bin/sudo", ["-n", helperPath])
             fputs("[helper] sudo status=\(helperResult.status) outLen=\(helperResult.stdout.count)\n", stderr)
         }
@@ -545,6 +551,7 @@ class SystemStatsModel: ObservableObject {
         result.pClusterFreqMHz = i32("pClusterFreqMHz")
         result.dramReadBytes   = i64("dramReadBytes")
         result.dramWriteBytes  = i64("dramWriteBytes")
+        result.fanCount        = i32("fanCount")
         result.fanRPM          = i32("fanRPM")
         return result
     }
@@ -556,10 +563,15 @@ class SystemStatsModel: ObservableObject {
                 Self.logger.error("helper missing at \(self.helperPath, privacy: .public)")
                 return
             }
+            guard self.helperHasSafeOwnership() else {
+                Self.logger.error("refusing sudo for helper or parent directory with unsafe ownership/permissions")
+                return
+            }
             guard !self.helperBootstrapInFlight else { return }
 
             let probe = self.shellResult("/usr/bin/sudo", ["-n", self.helperPath])
-            if probe.status == 0 {
+            if probe.status == 0,
+               UserDefaults.standard.bool(forKey: self.helperSudoersVersionKey) {
                 Self.logger.debug("helper already authorized")
                 return
             }
@@ -569,17 +581,95 @@ class SystemStatsModel: ObservableObject {
 
             Self.logger.notice("requesting one-time administrator approval for helper access")
             let user = NSUserName()
-            let sudoersLine = Self.shellSingleQuote("\(user) ALL=(root) NOPASSWD: \(self.helperPath)")
+            // Quote an empty argument list to restrict the read-only command to no
+            // arguments, then allow only the two fixed fan operations. The helper
+            // itself also rejects every other argument.
+            let allowedCommands = [
+                "\(self.helperPath) \"\"",
+                "\(self.helperPath) --fan-max",
+                "\(self.helperPath) --fan-auto"
+            ].joined(separator: ", ")
+            let sudoersLine = Self.shellSingleQuote("\(user) ALL=(root) NOPASSWD: \(allowedCommands)")
             let command = "/bin/mkdir -p /etc/sudoers.d && /usr/bin/printf '%s\\n' \(sudoersLine) > \(self.helperSudoersPath) && /bin/chmod 440 \(self.helperSudoersPath) && /usr/sbin/visudo -cf \(self.helperSudoersPath)"
             let script = "do shell script \(Self.appleScriptLiteral(command)) with administrator privileges"
             let setup = self.shellResult("/usr/bin/osascript", ["-e", script])
 
             if setup.status == 0 {
+                UserDefaults.standard.set(true, forKey: self.helperSudoersVersionKey)
                 Self.logger.notice("helper sudoers rule installed successfully")
             } else {
                 Self.logger.error("helper bootstrap failed status=\(setup.status) stderr=\(setup.stderr, privacy: .public)")
             }
         }
+    }
+
+    // MARK: - Fan control
+
+    func setFanControlMode(_ mode: FanControlMode) {
+        guard fanCount > 0, !fanControlBusy else { return }
+        fanControlBusy = true
+        fanControlError = nil
+
+        samplerQueue.async { [weak self] in
+            guard let self else { return }
+            let result = self.runFanHelper(mode)
+            let response = Result {
+                try FanControlResponse.parse(result.stdout, expectedMode: mode)
+            }
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.fanControlBusy = false
+                switch response {
+                case .success:
+                    self.fanControlMode = mode
+                case .failure(let error):
+                    self.fanControlMode = nil
+                    self.fanControlError = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    /// Best-effort restoration for a normal app quit. Max Cooling is thermally safe
+    /// if the process crashes, but normal termination should still return arbitration
+    /// to macOS so the fans do not remain unnecessarily loud.
+    func restoreAutomaticFanControlBeforeTermination() {
+        guard fanControlMode == .maximum else { return }
+        let result = runFanHelper(.automatic)
+        if (try? FanControlResponse.parse(result.stdout, expectedMode: .automatic)) == nil {
+            Self.logger.error("failed to restore automatic fan control before termination")
+        }
+    }
+
+    private func runFanHelper(_ mode: FanControlMode) -> (stdout: String, stderr: String, status: Int32) {
+        guard FileManager.default.isExecutableFile(atPath: helperPath),
+              helperHasSafeOwnership() else {
+            let payload = #"{"success":false,"error":"Reinstall MacMonitor so its privileged helper is owned by root and is not writable by other users."}"#
+            return (payload, "unsafe or missing helper", -1)
+        }
+        let argument = mode == .maximum ? "--fan-max" : "--fan-auto"
+        return shellResult("/usr/bin/sudo", ["-n", helperPath, argument])
+    }
+
+    private func helperHasSafeOwnership() -> Bool {
+        let manager = FileManager.default
+        let paths = [helperPath, (helperPath as NSString).deletingLastPathComponent]
+        for path in paths {
+            let url = URL(fileURLWithPath: path)
+            let values = try? url.resourceValues(forKeys: [.isSymbolicLinkKey])
+            guard let attributes = try? manager.attributesOfItem(atPath: path),
+                  let ownerID = (attributes[.ownerAccountID] as? NSNumber)?.intValue,
+                  let permissions = (attributes[.posixPermissions] as? NSNumber)?.intValue,
+                  PrivilegedHelperSecurity.isSafe(
+                    ownerID: ownerID,
+                    permissions: permissions,
+                    isSymbolicLink: values?.isSymbolicLink == true
+                  ) else {
+                return false
+            }
+        }
+        return true
     }
 
     private func mergeMetrics(primary: IOReportData?, fallback: IOReportData) -> IOReportData {
@@ -604,6 +694,7 @@ class SystemStatsModel: ObservableObject {
         if primary.dramReadBytes > 0   { merged.dramReadBytes   = primary.dramReadBytes }
         if primary.dramWriteBytes > 0  { merged.dramWriteBytes  = primary.dramWriteBytes }
         if primary.cpuDieHotspot > 0   { merged.cpuDieHotspot   = primary.cpuDieHotspot }
+        if primary.fanCount > 0        { merged.fanCount        = primary.fanCount }
         if primary.fanRPM > 0          { merged.fanRPM          = primary.fanRPM }
         return merged
     }

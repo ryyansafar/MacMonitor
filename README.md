@@ -75,7 +75,7 @@ MacMonitor 2.0 reads **all hardware data directly from Apple's kernel interfaces
 ### New sensor data in this release
 
 - **CPU Die Hotspot** — the absolute peak temperature on the CPU die (SMC key `TCMz`), not just an average. This is the same reading TG Pro labels "CPU Die (Hotspot)".
-- **Fan RPM** — live fan speed via SMC key `F0Ac`. Section is hidden automatically on fanless models (MacBook Air).
+- **Fan RPM and safe control** — live fan speed plus explicit Automatic and Max Cooling actions. Max Cooling only uses each detected fan's hardware-reported maximum; arbitrary low RPM values are not accepted. The section is hidden automatically on fanless models (MacBook Air).
 - **Chip variant** — accurately identified from `machdep.cpu.brand_string` and displayed as "M2 Pro", "M2 Max", etc.
 - **Sensor research toolkit** — `sensor-research/` directory includes standalone SMC/HID/IOReport scanners used to discover and verify every sensor key.
 
@@ -246,10 +246,11 @@ clang -ObjC \
   -framework Foundation -framework IOKit -framework CoreFoundation \
   -isysroot "$SDK" -L "$SDK/usr/lib" -lIOReport
 
-# Install
-mkdir -p /Users/Shared/MacMonitor
-cp /tmp/macmonitor-helper /Users/Shared/MacMonitor/macmonitor-helper
-chmod 755 /Users/Shared/MacMonitor/macmonitor-helper
+# Install with root ownership. The app will not grant sudo access to a helper
+# or parent directory that can be replaced by an unprivileged user.
+sudo install -d -o root -g wheel -m 755 /Users/Shared/MacMonitor
+sudo install -o root -g wheel -m 755 \
+  /tmp/macmonitor-helper /Users/Shared/MacMonitor/macmonitor-helper
 ```
 
 ---
@@ -293,7 +294,7 @@ chmod 755 /Users/Shared/MacMonitor/macmonitor-helper
 
 - **No App Sandbox** — required to access Mach kernel APIs and IOReport. This means MacMonitor cannot be submitted to the Mac App Store, but can be freely distributed as a DMG.
 - **No third-party dependencies** — everything is read from macOS's own kernel interfaces.
-- **Privileged helper pattern** — IOReport power sampling requires root. A minimal helper binary runs with elevated privileges; the main app communicates with it via stdout JSON. The helper does nothing other than sample sensors and exit.
+- **Privileged helper pattern** — IOReport power sampling requires root. A minimal helper binary runs with elevated privileges and communicates through stdout JSON. With no arguments it only samples sensors and exits. Its only write commands are `--fan-max` and `--fan-auto`; arbitrary SMC keys and arbitrary RPM values are not exposed.
 - **Two-sample delta** — CPU usage, DRAM bandwidth, and power are all rate metrics. MacMonitor takes two samples 100ms apart and computes the delta, giving accurate per-second rates.
 
 ---

@@ -78,6 +78,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         }
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        model.restoreAutomaticFanControlBeforeTermination()
+    }
+
     // MARK: - Menu bar
 
     private func setupMenuBar() {

@@ -63,9 +63,9 @@ clang -ObjC \
   -framework Foundation -framework IOKit -framework CoreFoundation \
   -isysroot "$SDK" -L "$SDK/usr/lib" -lIOReport
 
-mkdir -p /Users/Shared/MacMonitor
-cp /tmp/macmonitor-helper /Users/Shared/MacMonitor/macmonitor-helper
-chmod 755 /Users/Shared/MacMonitor/macmonitor-helper
+sudo install -d -o root -g wheel -m 755 /Users/Shared/MacMonitor
+sudo install -o root -g wheel -m 755 \
+  /tmp/macmonitor-helper /Users/Shared/MacMonitor/macmonitor-helper
 ```
 
 The app will prompt for admin approval on first launch to configure sudoers access for the helper.
@@ -104,7 +104,7 @@ SystemStatsModel  (ObservableObject — single source of truth for all views)
 
 - **No App Sandbox** — Required to access Mach kernel APIs and IOReport. MacMonitor cannot be on the Mac App Store, but freely distributable as a DMG.
 - **No third-party packages** — Zero Swift Package Manager dependencies. Everything is macOS native.
-- **Privileged helper pattern** — IOReport power sampling needs root. A minimal binary (`macmonitor-helper`) runs with elevated privileges, outputs JSON to stdout, and exits. The main app parses the JSON. This is the smallest possible privilege surface.
+- **Privileged helper pattern** — IOReport power sampling needs root. A minimal binary (`macmonitor-helper`) runs with elevated privileges, outputs JSON to stdout, and exits. With no arguments it is read-only. The only accepted write commands are `--fan-max` and `--fan-auto`; both operate on every detected fan and reject arbitrary RPM input.
 - **Two-sample delta** — IOReport, CPU ticks, DRAM bandwidth, and network are all rate metrics (energy/time = watts, ticks/time = %, bytes/time = GB/s). MacMonitor takes two samples 100ms apart and divides by the measured interval.
 - **Persistent IOReport subscription** — `IOReportWrapper` creates one subscription at `+initialize` and reuses it across calls. Creating a subscription per-call is slow (~50ms overhead).
 

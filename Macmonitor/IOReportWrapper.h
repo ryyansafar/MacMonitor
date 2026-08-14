@@ -20,6 +20,7 @@ typedef struct {
     int    sClusterFreqMHz;
     int64_t dramReadBytes;
     int64_t dramWriteBytes;
+    int32_t fanCount;       // Number of hardware fans (SMC FNum)
     int32_t fanRPM;         // RPM — Fan 0 actual speed (SMC F0Ac); 0 on fanless models
 } IOReportData;
 
