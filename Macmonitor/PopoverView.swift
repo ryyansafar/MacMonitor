@@ -379,8 +379,46 @@ private struct PowerTile: View {
 
 private struct ProcessSection: View {
     @ObservedObject var model: SystemStatsModel
+    @State private var mode: ProcessMode = .cpu
+
+    private enum ProcessMode: String, CaseIterable, Identifiable {
+        case cpu = "CPU"
+        case disk = "Disk"
+        case network = "Network"
+        var id: Self { self }
+    }
+
     var body: some View {
         SectionBox(icon: "list.bullet", title: "Top Processes") {
+            Picker("Process metric", selection: $mode) {
+                ForEach(ProcessMode.allCases) { metric in
+                    Text(metric.rawValue).tag(metric)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            switch mode {
+            case .cpu:
+                cpuRows
+            case .disk:
+                ioRows(
+                    header: ("Read", "Write"),
+                    rows: model.topDiskProcs.map { ($0.id, $0.name, fmtB($0.readBps) + "/s", fmtB($0.writeBps) + "/s") },
+                    colors: (Color(hex: "64D2FF"), Color(hex: "FF9F0A"))
+                )
+            case .network:
+                ioRows(
+                    header: ("Down", "Up"),
+                    rows: model.topNetworkProcs.map { ($0.id, $0.name, fmtB($0.downBps) + "/s", fmtB($0.upBps) + "/s") },
+                    colors: (Color(hex: "30D158"), Color(hex: "BF5AF2"))
+                )
+            }
+        }
+    }
+
+    private var cpuRows: some View {
+        Group {
             HStack {
                 Text("Process").frame(maxWidth: .infinity, alignment: .leading)
                 Text("CPU").frame(width: 40, alignment: .trailing)
@@ -406,6 +444,45 @@ private struct ProcessSection: View {
             }
         }
     }
+
+    @ViewBuilder
+    private func ioRows(
+        header: (String, String),
+        rows: [(Int, String, String, String)],
+        colors: (Color, Color)
+    ) -> some View {
+        HStack {
+            Text("Process").frame(maxWidth: .infinity, alignment: .leading)
+            Text(header.0).frame(width: 70, alignment: .trailing)
+            Text(header.1).frame(width: 70, alignment: .trailing)
+        }
+        .font(.system(size: 9)).foregroundColor(.secondary)
+
+        if rows.isEmpty {
+            Text("Collecting activity…")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            ForEach(rows, id: \.0) { row in
+                HStack(spacing: 0) {
+                    Text(row.1)
+                        .font(.system(size: 11)).foregroundColor(.primary)
+                        .lineLimit(1).truncationMode(.middle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(row.2)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(colors.0)
+                        .frame(width: 70, alignment: .trailing)
+                    Text(row.3)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(colors.1)
+                        .frame(width: 70, alignment: .trailing)
+                }
+            }
+        }
+    }
+
     func cpuClr(_ v: Double) -> Color {
         v >= 50 ? Color(hex:"FF453A") : v >= 20 ? Color(hex:"FFD60A") : Color(hex:"30D158")
     }

@@ -7,6 +7,14 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ---
 
+## Unreleased
+
+### Added
+
+- **Per-process I/O rankings** — the main dashboard's Top Processes section can now
+  switch between CPU/memory, disk read/write rates, and network download/upload rates.
+  Sampling runs on a dedicated serial queue and does not add process sampling to the widget.
+
 ## [2.0.5] — 2026-08-06
 
 ### The "Widget Actually Exists" Release

@@ -91,6 +91,8 @@ class SystemStatsModel: ObservableObject {
     @Published var cpuDieHotspot: Double = 0
 
     @Published var topProcs: [ProcInfo] = []
+    @Published var topDiskProcs: [DiskProcInfo] = []
+    @Published var topNetworkProcs: [NetworkProcInfo] = []
     @Published var nativeReady           = false
     @Published var helperMissing         = false
 
@@ -109,10 +111,16 @@ class SystemStatsModel: ObservableObject {
     private var batterySampleCountdown    = 0
     private var timer: Timer?
     private var diskTimer: Timer?          // independent timer — keeps ioreg off samplerQueue
+    private var processIOTimer: Timer?
     private let samplerQueue = DispatchQueue(label: "rybo.Macmonitor.sampler", qos: .utility)
+    // This serial queue owns previousDiskProcessSamples. Keeping both snapshots on
+    // one queue makes the rate baseline race-free without locking the UI thread.
+    private let processIOQueue = DispatchQueue(label: "rybo.Macmonitor.process-io", qos: .utility)
     private let helperPath = "/Users/Shared/MacMonitor/macmonitor-helper"
     private let helperSudoersPath = "/etc/sudoers.d/macmonitor-helper"
     private var helperBootstrapInFlight = false
+    private var processIOInFlight = false
+    private var previousDiskProcessSamples: [Int: DiskIOCounter] = [:]
 
     // MARK: - Start
 
@@ -133,6 +141,13 @@ class SystemStatsModel: ObservableObject {
             self?.tickDisk()
         }
         tickDisk()   // seed immediately (async, doesn't block)
+
+        // Per-process disk and network I/O is intentionally main-app-only. nettop's
+        // two-snapshot delta takes about one second, so keep it off samplerQueue.
+        processIOTimer = Timer.scheduledTimer(withTimeInterval: 6.0, repeats: true) { [weak self] _ in
+            self?.tickProcessIO()
+        }
+        tickProcessIO()
 
         // Static system info (includes one ioreg call for GPU core count).
         // Run on a background queue so it doesn't block samplerQueue either.
@@ -227,6 +242,24 @@ class SystemStatsModel: ObservableObject {
                 self.diskReadKBs        = readKBs
                 self.diskWriteKBs       = writeKBs
                 self.diskInFlight       = false
+            }
+        }
+    }
+
+    private func tickProcessIO() {
+        guard !processIOInFlight else { return }
+        processIOInFlight = true
+
+        processIOQueue.async { [weak self] in
+            guard let self else { return }
+            let diskRows = self.sampleDiskProcessRanks()
+            let networkRows = self.sampleNetworkProcessRanks()
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.topDiskProcs = diskRows
+                self.topNetworkProcs = networkRows
+                self.processIOInFlight = false
             }
         }
     }
@@ -329,6 +362,77 @@ class SystemStatsModel: ObservableObject {
         }
 
         return (read, write)
+    }
+
+    // MARK: - Per-process I/O rankings
+
+    private func sampleDiskProcessRanks() -> [DiskProcInfo] {
+        let current = diskProcessSamples(sampledAt: Date())
+        let previous = previousDiskProcessSamples
+        previousDiskProcessSamples = current
+
+        var names: [Int: String] = [:]
+        for pid in current.keys where previous[pid] != nil {
+            if let name = processName(pid: pid), shouldShowProcess(name) {
+                names[pid] = name
+            }
+        }
+        return ProcessIORanking.diskRows(previous: previous, current: current, names: names)
+    }
+
+    private func diskProcessSamples(sampledAt: Date) -> [Int: DiskIOCounter] {
+        let pidBytes = proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0)
+        guard pidBytes > 0 else { return [:] }
+
+        var pids = [pid_t](
+            repeating: 0,
+            count: Int(pidBytes) / MemoryLayout<pid_t>.size
+        )
+        let populatedBytes = proc_listpids(
+            UInt32(PROC_ALL_PIDS),
+            0,
+            &pids,
+            Int32(pids.count * MemoryLayout<pid_t>.size)
+        )
+        let populatedCount = max(0, Int(populatedBytes) / MemoryLayout<pid_t>.size)
+        var samples: [Int: DiskIOCounter] = [:]
+
+        for pid in pids.prefix(populatedCount) where pid > 0 {
+            var readBytes: UInt64 = 0
+            var writeBytes: UInt64 = 0
+            guard MMReadProcessDiskCounters(pid, &readBytes, &writeBytes) else { continue }
+            samples[Int(pid)] = DiskIOCounter(
+                readBytes: readBytes,
+                writeBytes: writeBytes,
+                sampledAt: sampledAt
+            )
+        }
+        return samples
+    }
+
+    private func sampleNetworkProcessRanks() -> [NetworkProcInfo] {
+        let result = shellResult("/usr/bin/nettop", [
+            "-P", "-L", "2", "-d", "-x", "-J", "bytes_in,bytes_out", "-s", "1"
+        ])
+        guard result.status == 0 else {
+            Self.logger.error("nettop failed status=\(result.status) stderr=\(result.stderr, privacy: .public)")
+            return []
+        }
+        let visibleRows = ProcessIORanking.networkRows(from: result.stdout, limit: .max)
+            .filter { shouldShowProcess($0.name) }
+        return Array(visibleRows.prefix(5))
+    }
+
+    private func processName(pid: Int) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(2 * MAXCOMLEN))
+        let length = proc_name(Int32(pid), &buffer, UInt32(buffer.count))
+        guard length > 0 else { return nil }
+        return String(cString: buffer)
+    }
+
+    private func shouldShowProcess(_ name: String) -> Bool {
+        let lowered = name.lowercased()
+        return name != "kernel_task" && !lowered.contains("macmonitor")
     }
 
     // MARK: - Battery (pmset + ioreg)
