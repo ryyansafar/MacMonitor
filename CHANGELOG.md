@@ -7,6 +7,14 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Configurable menu bar metrics** — choose and reorder CPU, memory, network,
+  disk I/O, power, and battery readings while preserving the existing detailed
+  indicator as the default.
+
 ## [2.0.5] — 2026-08-06
 
 ### The "Widget Actually Exists" Release

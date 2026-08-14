@@ -21,10 +21,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     // Subscribe to model changes so the label updates in sync with each tick,
     // not on a separate independent timer that may fire before data is ready.
     private var cancellables = Set<AnyCancellable>()
-    private var lastCPU = 0
-    private var lastMem = 0
-    private var lastTemp = 0.0
     private var isCPUOnlyMenuBar = false
+    private var menuBarSnapshot = MenuBarSnapshot()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -41,11 +39,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         Publishers.CombineLatest3(model.$cpuUsage, model.$memPct, model.$cpuTemp)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] cpu, mem, temp in
-                self?.lastCPU = cpu
-                self?.lastMem = mem
-                self?.lastTemp = temp
-                self?.updateLabel(cpu: cpu, mem: mem, temp: temp)
+                self?.menuBarSnapshot.cpuUsage = cpu
+                self?.menuBarSnapshot.memoryPercent = mem
+                self?.menuBarSnapshot.cpuTemperature = temp
+                self?.updateLabel()
                 self?.refreshWidgetsIfDue()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$netInBps, model.$netOutBps)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] incoming, outgoing in
+                self?.menuBarSnapshot.networkInBytesPerSecond = incoming
+                self?.menuBarSnapshot.networkOutBytesPerSecond = outgoing
+                self?.updateLabel()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$diskReadKBs, model.$diskWriteKBs)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] read, write in
+                self?.menuBarSnapshot.diskReadKilobytesPerSecond = read
+                self?.menuBarSnapshot.diskWriteKilobytesPerSecond = write
+                self?.updateLabel()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$totalPower, model.$batteryPct)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] power, battery in
+                self?.menuBarSnapshot.totalPower = power
+                self?.menuBarSnapshot.batteryPercent = battery
+                self?.updateLabel()
             }
             .store(in: &cancellables)
 
@@ -56,8 +81,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
                 let isCPUOnly = UserDefaults.standard.bool(forKey: "cpuOnlyMenuBar")
                 guard isCPUOnly != self.isCPUOnlyMenuBar else { return }
                 self.isCPUOnlyMenuBar = isCPUOnly
-                self.updateLabel(cpu: self.lastCPU, mem: self.lastMem, temp: self.lastTemp)
+                self.updateLabel()
             }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .menuBarLayoutChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateLabel() }
             .store(in: &cancellables)
 
         // Restore Open at Login state on launch
@@ -99,18 +129,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         )
     }
 
-    private func updateLabel(cpu: Int, mem: Int, temp: Double) {
+    private func updateLabel() {
         guard let btn = statusItem?.button else { return }
         if isCPUOnlyMenuBar {
-            btn.title = "\(cpu)%"
-            btn.toolTip = "CPU usage: \(cpu)%"
+            btn.title = "\(menuBarSnapshot.cpuUsage)%"
+            btn.toolTip = "CPU usage: \(menuBarSnapshot.cpuUsage)%"
             return
         }
-        btn.toolTip = "MacMonitor"
-        let dot = cpu >= 85 || mem >= 85 ? "🔴"
-                : cpu >= 60 || mem >= 60 ? "🟡" : "🟢"
-        let tempStr = temp > 0 ? String(format: " %.0f°", temp) : ""
-        btn.title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
+        btn.toolTip = "MacMonitor — CPU \(menuBarSnapshot.cpuUsage)%, Memory \(menuBarSnapshot.memoryPercent)%"
+        let dot = menuBarSnapshot.cpuUsage >= 85 || menuBarSnapshot.memoryPercent >= 85 ? "🔴"
+                : menuBarSnapshot.cpuUsage >= 60 || menuBarSnapshot.memoryPercent >= 60 ? "🟡" : "🟢"
+        let fragments = MenuBarLayoutStore.visibleMetrics().compactMap {
+            $0.titleFragment(snapshot: menuBarSnapshot)
+        }
+        btn.title = fragments.isEmpty ? dot : "\(dot) \(fragments.joined(separator: "  "))"
     }
 
     // MARK: - Click handling
@@ -331,7 +363,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         }
 
         let win = NSWindow(
-            contentRect:  NSRect(x: 0, y: 0, width: 360, height: 460),
+            contentRect:  NSRect(x: 0, y: 0, width: 400, height: 560),
             styleMask:    [.titled, .closable, .fullSizeContentView],
             backing:      .buffered,
             defer:        false

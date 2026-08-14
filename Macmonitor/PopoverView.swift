@@ -449,8 +449,10 @@ struct SettingsSheet: View {
     @AppStorage("cpuOnlyMenuBar") var cpuOnlyMenuBar = false
     @AppStorage("appTheme") private var appTheme = AppTheme.automatic.rawValue
     @ObservedObject private var updater = UpdateChecker.shared
+    @State private var menuMetrics = MenuBarLayoutStore.orderedMetrics()
 
     var body: some View {
+        ScrollView(.vertical, showsIndicators: true) {
         VStack(alignment: .leading, spacing: 20) {
             Text("Settings")
                 .font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
@@ -461,6 +463,29 @@ struct SettingsSheet: View {
                 Text("Show a compact value such as 12% in the menu bar.")
                     .font(.system(size: 11)).foregroundColor(.secondary)
             }
+
+            DisclosureGroup("Menu Bar Metrics") {
+                VStack(spacing: 8) {
+                    ForEach(menuMetrics) { metric in
+                        MenuBarMetricRow(metric: metric, metrics: $menuMetrics)
+                    }
+                    HStack {
+                        Text("At least one metric remains enabled.")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Button("Reset") {
+                            MenuBarLayoutStore.reset()
+                            menuMetrics = MenuBarLayoutStore.orderedMetrics()
+                        }
+                        .font(.system(size: 10))
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .font(.system(size: 12, weight: .medium))
+            .disabled(cpuOnlyMenuBar)
+            .opacity(cpuOnlyMenuBar ? 0.55 : 1)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Appearance")
@@ -581,9 +606,58 @@ struct SettingsSheet: View {
                 }
             }
         }
-        .padding(22).frame(width: 360)
+        .padding(22)
+        }
+        .frame(width: 400, height: 540)
         .background(Color(nsColor: .windowBackgroundColor))
         .preferredColorScheme(AppTheme(rawValue: appTheme)?.colorScheme)
+    }
+}
+
+private struct MenuBarMetricRow: View {
+    let metric: MenuBarMetric
+    @Binding var metrics: [MenuBarMetric]
+    @State private var isVisible = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Toggle(isOn: Binding(
+                get: { isVisible },
+                set: { requested in
+                    _ = MenuBarLayoutStore.setVisible(metric, requested)
+                    isVisible = MenuBarLayoutStore.isVisible(metric)
+                    metrics = MenuBarLayoutStore.orderedMetrics()
+                }
+            )) {
+                Label(metric.title, systemImage: metric.systemImage)
+                    .font(.system(size: 11))
+            }
+            .toggleStyle(.checkbox)
+
+            Spacer()
+
+            Button {
+                MenuBarLayoutStore.move(metric, direction: -1)
+                metrics = MenuBarLayoutStore.orderedMetrics()
+            } label: {
+                Image(systemName: "chevron.up")
+            }
+            .buttonStyle(.borderless)
+            .disabled(metrics.first == metric)
+
+            Button {
+                MenuBarLayoutStore.move(metric, direction: 1)
+                metrics = MenuBarLayoutStore.orderedMetrics()
+            } label: {
+                Image(systemName: "chevron.down")
+            }
+            .buttonStyle(.borderless)
+            .disabled(metrics.last == metric)
+        }
+        .onAppear { isVisible = MenuBarLayoutStore.isVisible(metric) }
+        .onReceive(NotificationCenter.default.publisher(for: .menuBarLayoutChanged)) { _ in
+            isVisible = MenuBarLayoutStore.isVisible(metric)
+        }
     }
 }
 
