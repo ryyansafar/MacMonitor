@@ -1,0 +1,680 @@
+========================================
+    GRAND SYSTEM SENSOR SCANNER (M2)
+========================================
+
+--- IOReport Group Scanner ---
+Group: Energy Model         | Status: OK (216 channels)
+Group: CPU Stats            | Status: OK (20 channels)
+Group: GPU Stats            | Status: OK (182 channels)
+Group: AMC Stats            | Status: OK (128 channels)
+Group: PMP                  | Status: OK (312 channels)
+Group: Thermal              | Status: OK (0 channels)
+Group: DCS Stats            | Status: OK (0 channels)
+Group: AppleH6Counters      | Status: OK (0 channels)
+Group: PerfCounters         | Status: OK (0 channels)
+Group: CLPC Stats           | Status: OK (0 channels)
+Group: RealTime Energy      | Status: OK (0 channels)
+
+--- SMC Key Scanner (Filtered for Sensors) ---
+Key: I000 | Value:    0.55
+Key: I002 | Value:    5.02
+Key: I004 | Value:    0.03
+Key: I006 | Value:    2.22
+Key: I5SR | Value:    0.05
+Key: ID0R | Value:    0.01
+Key: IDBR | Value:    0.12
+Key: IE0b | Value:   10.97
+Key: IE1b | Value:    1.39
+Key: IFLR | Value:    0.12
+Key: IG0C | Value:    0.77
+Key: IMVC | Value:    3.92
+Key: IP0C | Value:    9.88
+Key: IP0b | Value:    0.04
+Key: IP0l | Value:    0.03
+Key: IP1b | Value:    0.01
+Key: IP2b | Value:    0.04
+Key: IP6b | Value:    0.03
+Key: IPBR | Value:    2.01
+Key: IPMC | Value:    0.38
+Key: IPSC | Value:    0.93
+Key: IPsC | Value:    1.29
+Key: IR0b | Value:    0.49
+Key: IR1b | Value:    0.43
+Key: IR2b | Value:    0.41
+Key: IR4b | Value:    0.02
+Key: IR5b | Value:    0.19
+Key: IR6b | Value:    0.01
+Key: IR9b | Value:    0.29
+Key: Ib0f | Value:    2.02
+Key: Ib8f | Value:    4.52
+Key: P5SR | Value:    0.58
+Key: PBAT | Value:   25.03
+Key: PDBR | Value:    1.54
+Key: PE0b | Value:   10.09
+Key: PE1b | Value:    1.32
+Key: PFLR | Value:    1.49
+Key: PG0C | Value:    0.26
+Key: PHPB | Value:  200.00
+Key: PHPC | Value:    8.80
+Key: PHPM | Value:    1.00
+Key: PHPS | Value:   17.70
+Key: PIDR | Value:    0.00
+Key: PMVC | Value:   14.77
+Key: PP0C | Value:   10.21
+Key: PP0b | Value:    0.02
+Key: PP0l | Value:    0.02
+Key: PP1b | Value:    0.01
+Key: PP2b | Value:    0.03
+Key: PP6b | Value:    0.01
+Key: PPBR | Value:   25.02
+Key: PPMC | Value:    1.43
+Key: PPSC | Value:    3.49
+Key: PPsC | Value:    1.40
+Key: PR0b | Value:    0.43
+Key: PR1b | Value:    0.35
+Key: PR2b | Value:    0.31
+Key: PR4b | Value:    0.01
+Key: PR5b | Value:    0.20
+Key: PR6b | Value:    0.01
+Key: PR9b | Value:    0.33
+Key: PSTR | Value:   29.95
+Key: PSVC | Value:   11.92
+Key: PZC0 | Value:   17.61
+Key: PZC1 | Value:   17.62
+Key: PZCU | Value:    1.59
+Key: PZD1 | Value:    1.41
+Key: Pb0f | Value:   25.08
+Key: TAOL | Value:   23.81
+Key: TB0T | Value:   28.50
+Key: TB1T | Value:   28.30
+Key: TB2T | Value:   28.50
+Key: TCDX | Value:   54.43
+Key: TCHP | Value:   35.91
+Key: TCMb | Value:   76.99
+Key: TCMz | Value:   85.67
+Key: TD00 | Value:   24.20
+Key: TD01 | Value:   24.18
+Key: TD02 | Value:   23.71
+Key: TD03 | Value:   23.48
+Key: TD04 | Value:   23.36
+Key: TD10 | Value:   24.05
+Key: TD11 | Value:   25.48
+Key: TD12 | Value:   24.63
+Key: TD13 | Value:   25.48
+Key: TD14 | Value:   23.98
+Key: TD20 | Value:   25.36
+Key: TD21 | Value:   27.89
+Key: TD22 | Value:   26.13
+Key: TD23 | Value:   28.38
+Key: TD24 | Value:   25.38
+Key: TDBP | Value:   26.75
+Key: TDCR | Value:   28.44
+Key: TDEC | Value:   27.75
+Key: TDEL | Value:   27.19
+Key: TDER | Value:   27.44
+Key: TDTP | Value:   28.94
+Key: TDVx | Value:   28.38
+Key: TDeL | Value:   26.75
+Key: TDeR | Value:   27.00
+Key: TED0 | Value:   54.14
+Key: TED1 | Value:   53.92
+Key: TFD0 | Value:   46.30
+Key: TFD1 | Value:   45.87
+Key: TH0a | Value:   29.49
+Key: TH0b | Value:   29.73
+Key: TH0x | Value:   29.73
+Key: TMVR | Value:   39.79
+Key: TPD0 | Value:   46.30
+Key: TPD1 | Value:   46.30
+Key: TPD2 | Value:   47.70
+Key: TPD3 | Value:   46.41
+Key: TPD4 | Value:   47.59
+Key: TPD5 | Value:   46.63
+Key: TPD6 | Value:   46.20
+Key: TPD7 | Value:   47.16
+Key: TPD8 | Value:   47.16
+Key: TPD9 | Value:   47.70
+Key: TPDX | Value:   47.70
+Key: TPDa | Value:   47.16
+Key: TPDb | Value:   46.20
+Key: TPDc | Value:   46.30
+Key: TPDd | Value:   46.73
+Key: TPDe | Value:   46.20
+Key: TPDf | Value:   46.73
+Key: TPMP | Value:   39.63
+Key: TPSP | Value:   42.54
+Key: TRD0 | Value:   48.45
+Key: TRD1 | Value:   48.99
+Key: TRD2 | Value:   48.45
+Key: TRD3 | Value:   47.70
+Key: TRD4 | Value:   48.99
+Key: TRD5 | Value:   48.88
+Key: TRD6 | Value:   48.13
+Key: TRD7 | Value:   49.31
+Key: TRD8 | Value:   48.56
+Key: TRD9 | Value:   48.13
+Key: TRDX | Value:   49.31
+Key: TRDa | Value:   48.77
+Key: TRDb | Value:   47.16
+Key: TRDc | Value:   48.56
+Key: TRDd | Value:   48.24
+Key: TRDe | Value:   49.31
+Key: TRDf | Value:   48.99
+Key: TS0P | Value:   45.61
+Key: TSCP | Value:   44.34
+Key: TSG1 | Value:   39.05
+Key: TSG2 | Value:   38.14
+Key: TVA0 | Value:   22.45
+Key: TVD0 | Value:   76.99
+Key: TVS0 | Value:   34.84
+Key: TVS1 | Value:   32.99
+Key: TVS2 | Value:   33.53
+Key: TW0P | Value:   42.38
+Key: TaLP | Value:   41.93
+Key: TaLT | Value:   30.61
+Key: TaLW | Value:   31.95
+Key: TaRF | Value:   40.07
+Key: TaRT | Value:   30.14
+Key: TaRW | Value:   29.24
+Key: TaTP | Value:   40.03
+Key: Te04 | Value:   56.87
+Key: Te05 | Value:   62.67
+Key: Te06 | Value:   70.36
+Key: Te0G | Value:   52.19
+Key: Te0H | Value:   57.99
+Key: Te0I | Value:   64.19
+Key: Te0P | Value:   63.33
+Key: Te0Q | Value:   70.36
+Key: Te0R | Value:   50.96
+Key: Te0S | Value:   58.96
+Key: Te0T | Value:   70.36
+Key: Te0U | Value:   59.41
+Key: Te0V | Value:   70.36
+Key: Tf11 | Value:    2.69
+Key: Tf14 | Value:   54.43
+Key: Tf15 | Value:   26.28
+Key: Tf16 | Value:   60.95
+Key: Tf18 | Value:   54.32
+Key: Tf19 | Value:   53.97
+Key: Tf1A | Value:   53.48
+Key: Tf1C | Value:    1.00
+Key: Tf1D | Value:   54.43
+Key: Tf1E | Value:   54.43
+Key: Tf20 | Value:    0.02
+Key: Tf21 | Value:    4.09
+Key: Tf24 | Value:   45.91
+Key: Tf25 | Value:   25.73
+Key: Tf26 | Value:   48.97
+Key: Tf28 | Value:   45.87
+Key: Tf29 | Value:   45.52
+Key: Tf2C | Value:    0.98
+Key: Tf2D | Value:   44.99
+Key: Tf2E | Value:   45.91
+Key: Tg00 | Value:   48.13
+Key: Tg01 | Value:   52.93
+Key: Tg04 | Value:   49.43
+Key: Tg05 | Value:   56.73
+Key: Tg0C | Value:   47.22
+Key: Tg0D | Value:   54.52
+Key: Tg0K | Value:   47.37
+Key: Tg0L | Value:   54.67
+Key: Tg0U | Value:   46.94
+Key: Tg0V | Value:   54.24
+Key: Tg0u | Value:   48.75
+Key: Tg0v | Value:   56.05
+Key: Tg12 | Value:   47.91
+Key: Tg13 | Value:   55.21
+Key: Tg1A | Value:   46.82
+Key: Tg1B | Value:   54.12
+Key: Tg1k | Value:   46.84
+Key: Tg1l | Value:   54.14
+Key: Th00 | Value:   47.00
+Key: Th01 | Value:   47.00
+Key: Th02 | Value:   47.58
+Key: Th04 | Value:   46.54
+Key: Th05 | Value:   46.54
+Key: Th06 | Value:   46.89
+Key: Th08 | Value:   50.69
+Key: Th09 | Value:   50.69
+Key: Th0A | Value:   52.78
+Key: Th0C | Value:   51.32
+Key: Th0D | Value:   51.32
+Key: Th0E | Value:   54.27
+Key: Tp04 | Value:   61.08
+Key: Tp05 | Value:   67.68
+Key: Tp06 | Value:   73.81
+Key: Tp0C | Value:   61.42
+Key: Tp0D | Value:   68.02
+Key: Tp0E | Value:   76.03
+Key: Tp0K | Value:   59.42
+Key: Tp0L | Value:   66.02
+Key: Tp0M | Value:   73.09
+Key: Tp0R | Value:   60.28
+Key: Tp0S | Value:   66.88
+Key: Tp0T | Value:   75.47
+Key: Tp0U | Value:   66.45
+Key: Tp0V | Value:   74.35
+Key: Tp0W | Value:   82.77
+Key: Tp0a | Value:   67.12
+Key: Tp0b | Value:   75.02
+Key: Tp0c | Value:   85.50
+Key: Tp0g | Value:   62.44
+Key: Tp0h | Value:   70.34
+Key: Tp0i | Value:   79.25
+Key: Tp0m | Value:   63.64
+Key: Tp0n | Value:   71.54
+Key: Tp0o | Value:   82.14
+Key: Tp0u | Value:   58.18
+Key: Tp0v | Value:   67.48
+Key: Tp0w | Value:   64.77
+Key: Tp0y | Value:   58.34
+Key: Tp0z | Value:   67.64
+Key: Tp10 | Value:   65.08
+Key: Tp16 | Value:   61.35
+Key: Tp17 | Value:   67.95
+Key: Tp18 | Value:   76.64
+Key: Tp1E | Value:   63.06
+Key: Tp1F | Value:   69.66
+Key: Tp1G | Value:   74.16
+Key: Tp1I | Value:   65.71
+Key: Tp1J | Value:   73.61
+Key: Tp1K | Value:   85.55
+Key: Tp1Q | Value:   69.09
+Key: Tp1R | Value:   76.99
+Key: Tp1S | Value:   85.67
+Key: Tp3O | Value:   71.19
+Key: Tp3P | Value:   85.50
+Key: Tp3S | Value:   62.35
+Key: Tp3T | Value:   65.08
+Key: Tp3W | Value:   73.01
+Key: Tp3X | Value:   85.67
+Key: Ts00 | Value:   51.11
+Key: Ts01 | Value:   51.11
+Key: Ts02 | Value:   53.22
+Key: Ts0C | Value:   46.90
+Key: Ts0D | Value:   46.90
+Key: Ts0E | Value:   47.44
+Key: Ts0K | Value:   47.42
+Key: Ts0L | Value:   47.42
+Key: Ts0M | Value:   47.98
+Key: Ts0P | Value:   27.06
+Key: Ts0Y | Value:   50.92
+Key: Ts0Z | Value:   50.92
+Key: Ts0a | Value:   53.48
+Key: Ts0h | Value:   51.11
+Key: Ts0i | Value:   53.48
+Key: Ts1P | Value:   25.75
+Key: VD0R | Value:    0.02
+Key: VDMA | Value:    3.73
+Key: VDMM | Value:    3.77
+Key: VE0b | Value:    0.92
+Key: VE1b | Value:    0.96
+Key: VF0b | Value:    0.62
+Key: VG0C | Value:    0.30
+Key: VP0C | Value:    1.04
+Key: VP0R | Value:   12.45
+Key: VP0b | Value:    0.65
+Key: VP0l | Value:    0.74
+Key: VP1b | Value:    0.82
+Key: VP1l | Value:    3.30
+Key: VP2b | Value:    0.69
+Key: VP3b | Value:    1.81
+Key: VP3l | Value:    1.80
+Key: VP4l | Value:    3.30
+Key: VP6b | Value:    0.56
+Key: VP7b | Value:    1.13
+Key: VP8b | Value:    1.23
+Key: VP9b | Value:    1.04
+Key: VPsC | Value:    1.09
+Key: VR0b | Value:    0.87
+Key: VR1b | Value:    0.82
+Key: VR1l | Value:    1.80
+Key: VR2b | Value:    0.76
+Key: VR3b | Value:    1.80
+Key: VR4b | Value:    0.56
+Key: VR5b | Value:    1.03
+Key: VR6b | Value:    0.87
+Key: VR7b | Value:    0.81
+Key: VR8b | Value:    1.23
+Key: VR9b | Value:    1.13
+Key: Vb0f | Value:   12.45
+Key: Vb1f | Value:   12.44
+
+Scan Complete.
+System: Apple M3 Pro
+Cores: 6 E + 6 P + 0 S = 12 total
+GPU Cores: 18
+
+=== Raw SMC Temperature Keys ===
+Key     Category                 Value  Status
+------  --------------------  --------  ------
+TAOL    Ambient                  23.9°C  ✅ OK
+TB0T    Board                    29.3°C  ✅ OK
+TB1T    Board                    29.3°C  ✅ OK
+TB2T    Board                    29.3°C  ✅ OK
+TCDX    CPU Die                  49.3°C  ✅ OK
+TCHP    CPU Core                 35.1°C  ✅ OK
+TCMb    CPU Die                  60.9°C  ✅ OK
+TCMz    CPU Die                  72.5°C  ✅ OK
+TD00    Display                  24.3°C  ✅ OK
+TD01    Display                  24.3°C  ✅ OK
+TD02    Display                  23.8°C  ✅ OK
+TD03    Display                  23.6°C  ✅ OK
+TD04    Display                  23.5°C  ✅ OK
+TD10    Display                  24.1°C  ✅ OK
+TD11    Display                  25.6°C  ✅ OK
+TD12    Display                  24.7°C  ✅ OK
+TD13    Display                  25.6°C  ✅ OK
+TD14    Display                  24.1°C  ✅ OK
+TD20    Display                  25.5°C  ✅ OK
+TD21    Display                  27.9°C  ✅ OK
+TD22    Display                  26.1°C  ✅ OK
+TD23    Display                  28.4°C  ✅ OK
+TD24    Display                  25.5°C  ✅ OK
+TDBP    Display                  26.8°C  ✅ OK
+TDCR    Display                  28.2°C  ✅ OK
+TDEC    Display                  27.6°C  ✅ OK
+TDEL    Display                  27.3°C  ✅ OK
+TDER    Display                  27.4°C  ✅ OK
+TDTP    Display                  28.9°C  ✅ OK
+TDVx    Display                  28.4°C  ✅ OK
+TDeL    Display                  26.9°C  ✅ OK
+TDeR    Display                  26.9°C  ✅ OK
+TED0    Other                    49.3°C  ✅ OK
+TED1    Other                    48.8°C  ✅ OK
+TFD0    Ambient                  44.2°C  ✅ OK
+TFD1    Ambient                  44.2°C  ✅ OK
+TH0a    NAND                     29.8°C  ✅ OK
+TH0b    NAND                     29.9°C  ✅ OK
+TH0x    NAND                     29.9°C  ✅ OK
+TMVR    Memory                   38.0°C  ✅ OK
+TPD0    SoC Package              43.7°C  ✅ OK
+TPD1    SoC Package              44.5°C  ✅ OK
+TPD2    SoC Package              43.7°C  ✅ OK
+TPD3    SoC Package              45.6°C  ✅ OK
+TPD4    SoC Package              44.5°C  ✅ OK
+TPD5    SoC Package              45.6°C  ✅ OK
+TPD6    SoC Package              44.2°C  ✅ OK
+TPD7    SoC Package              43.8°C  ✅ OK
+TPD8    SoC Package              44.8°C  ✅ OK
+TPD9    SoC Package              44.8°C  ✅ OK
+TPDX    SoC Package              45.6°C  ✅ OK
+TPDa    SoC Package              43.3°C  ✅ OK
+TPDb    SoC Package              44.6°C  ✅ OK
+TPDc    SoC Package              44.7°C  ✅ OK
+TPDd    SoC Package              45.0°C  ✅ OK
+TPDe    SoC Package              43.9°C  ✅ OK
+TPDf    SoC Package              44.8°C  ✅ OK
+TPMP    SoC Package              38.1°C  ✅ OK
+TPSP    SoC Package              40.3°C  ✅ OK
+TRD0    GPU                      45.3°C  ✅ OK
+TRD1    GPU                      46.3°C  ✅ OK
+TRD2    GPU                      45.6°C  ✅ OK
+TRD3    GPU                      46.0°C  ✅ OK
+TRD4    GPU                      45.4°C  ✅ OK
+TRD5    GPU                      46.2°C  ✅ OK
+TRD6    GPU                      46.2°C  ✅ OK
+TRD7    GPU                      45.6°C  ✅ OK
+TRD8    GPU                      45.9°C  ✅ OK
+TRD9    GPU                      46.3°C  ✅ OK
+TRDX    GPU                      47.2°C  ✅ OK
+TRDa    GPU                      45.0°C  ✅ OK
+TRDb    GPU                      45.1°C  ✅ OK
+TRDc    GPU                      47.2°C  ✅ OK
+TRDd    GPU                      47.1°C  ✅ OK
+TRDe    GPU                      45.9°C  ✅ OK
+TRDf    GPU                      46.2°C  ✅ OK
+TS0P    SSD                      41.9°C  ✅ OK
+TSCP    SSD                      41.1°C  ✅ OK
+TSG1    SSD                      37.6°C  ✅ OK
+TSG2    SSD                      36.8°C  ✅ OK
+TVA0    VRM                      23.5°C  ✅ OK
+TVD0    VRM                      60.9°C  ✅ OK
+TVMD    VRM                       0.0°C  ⚠ FILTERED (≤0°C)
+TVS0    VRM                      34.5°C  ✅ OK
+TVS1    VRM                      32.6°C  ✅ OK
+TVS2    VRM                      32.8°C  ✅ OK
+TW0P    Wireless                 40.3°C  ✅ OK
+Ta04    Ambient                   0.0°C  ⚠ FILTERED (≤0°C)
+Ta05    Ambient                  -3.1°C  ⚠ FILTERED (≤0°C)
+Ta08    Ambient                   0.0°C  ⚠ FILTERED (≤0°C)
+Ta09    Ambient                  -3.1°C  ⚠ FILTERED (≤0°C)
+Ta0C    Ambient                   0.0°C  ⚠ FILTERED (≤0°C)
+Ta0D    Ambient                  -3.1°C  ⚠ FILTERED (≤0°C)
+Ta0G    Ambient                   0.0°C  ⚠ FILTERED (≤0°C)
+Ta0H    Ambient                  -3.1°C  ⚠ FILTERED (≤0°C)
+Ta0K    Ambient                   0.0°C  ⚠ FILTERED (≤0°C)
+Ta0L    Ambient                  -3.1°C  ⚠ FILTERED (≤0°C)
+TaLP    Ambient                  39.9°C  ✅ OK
+TaLT    Ambient                  30.8°C  ✅ OK
+TaLW    Ambient                  32.0°C  ✅ OK
+TaRF    Ambient                  38.3°C  ✅ OK
+TaRT    Ambient                  30.4°C  ✅ OK
+TaRW    Ambient                  29.7°C  ✅ OK
+TaTP    Ambient                  38.3°C  ✅ OK
+Te04    CPU E-Core               45.8°C  ✅ OK
+Te05    CPU E-Core               51.6°C  ✅ OK
+Te06    CPU E-Core               57.6°C  ✅ OK
+Te0G    CPU E-Core               44.4°C  ✅ OK
+Te0H    CPU E-Core               50.2°C  ✅ OK
+Te0I    CPU E-Core               55.2°C  ✅ OK
+Te0P    CPU E-Core               52.3°C  ✅ OK
+Te0Q    CPU E-Core               57.6°C  ✅ OK
+Te0R    CPU E-Core               43.7°C  ✅ OK
+Te0S    CPU E-Core               51.7°C  ✅ OK
+Te0T    CPU E-Core               58.0°C  ✅ OK
+Te0U    CPU E-Core               52.2°C  ✅ OK
+Te0V    CPU E-Core               58.0°C  ✅ OK
+Tf10    CPU P-Core               -0.0°C  ⚠ FILTERED (≤0°C)
+Tf11    CPU P-Core                2.7°C  ⚠ FILTERED (<10°C silicon)
+Tf12    CPU P-Core               -2.9°C  ⚠ FILTERED (≤0°C)
+Tf14    CPU P-Core               49.3°C  ✅ OK
+Tf15    CPU P-Core               26.3°C  ✅ OK
+Tf16    CPU P-Core               61.0°C  ✅ OK
+Tf18    CPU P-Core               49.2°C  ✅ OK
+Tf19    CPU P-Core               48.8°C  ✅ OK
+Tf1A    CPU P-Core               48.5°C  ✅ OK
+Tf1C    CPU P-Core                1.0°C  ⚠ FILTERED (<10°C silicon)
+Tf1D    CPU P-Core               49.3°C  ✅ OK
+Tf1E    CPU P-Core               49.3°C  ✅ OK
+Tf20    CPU P-Core                0.0°C  ⚠ FILTERED (<10°C silicon)
+Tf21    CPU P-Core                4.1°C  ⚠ FILTERED (<10°C silicon)
+Tf22    CPU P-Core               -3.7°C  ⚠ FILTERED (≤0°C)
+Tf24    CPU P-Core               43.9°C  ✅ OK
+Tf25    CPU P-Core               25.7°C  ✅ OK
+Tf26    CPU P-Core               49.0°C  ✅ OK
+Tf28    CPU P-Core               43.9°C  ✅ OK
+Tf29    CPU P-Core               43.6°C  ✅ OK
+Tf2C    CPU P-Core                0.9°C  ⚠ FILTERED (<10°C silicon)
+Tf2D    CPU P-Core               41.3°C  ✅ OK
+Tf2E    CPU P-Core               43.9°C  ✅ OK
+Tg00    GPU                      43.2°C  ✅ OK
+Tg01    GPU                      48.0°C  ✅ OK
+Tg04    GPU                      43.7°C  ✅ OK
+Tg05    GPU                      51.0°C  ✅ OK
+Tg0C    GPU                      42.5°C  ✅ OK
+Tg0D    GPU                      49.8°C  ✅ OK
+Tg0K    GPU                      42.7°C  ✅ OK
+Tg0L    GPU                      50.0°C  ✅ OK
+Tg0U    GPU                      42.9°C  ✅ OK
+Tg0V    GPU                      50.2°C  ✅ OK
+Tg0u    GPU                      43.0°C  ✅ OK
+Tg0v    GPU                      50.3°C  ✅ OK
+Tg12    GPU                      43.2°C  ✅ OK
+Tg13    GPU                      50.5°C  ✅ OK
+Tg1A    GPU                      42.9°C  ✅ OK
+Tg1B    GPU                      50.2°C  ✅ OK
+Tg1k    GPU                      43.3°C  ✅ OK
+Tg1l    GPU                      50.6°C  ✅ OK
+Th00    Other                    42.6°C  ✅ OK
+Th01    Other                    42.6°C  ✅ OK
+Th02    Other                    43.0°C  ✅ OK
+Th04    Other                    42.4°C  ✅ OK
+Th05    Other                    42.4°C  ✅ OK
+Th06    Other                    42.7°C  ✅ OK
+Th08    Other                    44.1°C  ✅ OK
+Th09    Other                    44.1°C  ✅ OK
+Th0A    Other                    45.2°C  ✅ OK
+Th0C    Other                    44.1°C  ✅ OK
+Th0D    Other                    44.1°C  ✅ OK
+Th0E    Other                    46.2°C  ✅ OK
+Tp04    CPU P-Core               50.1°C  ✅ OK
+Tp05    CPU P-Core               56.7°C  ✅ OK
+Tp06    CPU P-Core               61.1°C  ✅ OK
+Tp0C    CPU P-Core               50.0°C  ✅ OK
+Tp0D    CPU P-Core               56.6°C  ✅ OK
+Tp0E    CPU P-Core               59.6°C  ✅ OK
+Tp0K    CPU P-Core               49.5°C  ✅ OK
+Tp0L    CPU P-Core               56.1°C  ✅ OK
+Tp0M    CPU P-Core               59.0°C  ✅ OK
+Tp0R    CPU P-Core               49.6°C  ✅ OK
+Tp0S    CPU P-Core               56.2°C  ✅ OK
+Tp0T    CPU P-Core               59.4°C  ✅ OK
+Tp0U    CPU P-Core               53.0°C  ✅ OK
+Tp0V    CPU P-Core               60.9°C  ✅ OK
+Tp0W    CPU P-Core               68.3°C  ✅ OK
+Tp0a    CPU P-Core               53.0°C  ✅ OK
+Tp0b    CPU P-Core               60.9°C  ✅ OK
+Tp0c    CPU P-Core               67.3°C  ✅ OK
+Tp0g    CPU P-Core               50.7°C  ✅ OK
+Tp0h    CPU P-Core               58.6°C  ✅ OK
+Tp0i    CPU P-Core               64.2°C  ✅ OK
+Tp0m    CPU P-Core               51.0°C  ✅ OK
+Tp0n    CPU P-Core               58.9°C  ✅ OK
+Tp0o    CPU P-Core               64.2°C  ✅ OK
+Tp0u    CPU P-Core               50.8°C  ✅ OK
+Tp0v    CPU P-Core               60.1°C  ✅ OK
+Tp0w    CPU P-Core               56.2°C  ✅ OK
+Tp0y    CPU P-Core               51.1°C  ✅ OK
+Tp0z    CPU P-Core               60.4°C  ✅ OK
+Tp10    CPU P-Core               56.8°C  ✅ OK
+Tp16    CPU P-Core               49.9°C  ✅ OK
+Tp17    CPU P-Core               56.5°C  ✅ OK
+Tp18    CPU P-Core               59.2°C  ✅ OK
+Tp1E    CPU P-Core               50.2°C  ✅ OK
+Tp1F    CPU P-Core               56.8°C  ✅ OK
+Tp1G    CPU P-Core               59.4°C  ✅ OK
+Tp1I    CPU P-Core               52.4°C  ✅ OK
+Tp1J    CPU P-Core               60.3°C  ✅ OK
+Tp1K    CPU P-Core               72.5°C  ✅ OK
+Tp1Q    CPU P-Core               52.3°C  ✅ OK
+Tp1R    CPU P-Core               60.2°C  ✅ OK
+Tp1S    CPU P-Core               69.0°C  ✅ OK
+Tp3O    CPU P-Core               57.0°C  ✅ OK
+Tp3P    CPU P-Core               68.3°C  ✅ OK
+Tp3S    CPU P-Core               55.1°C  ✅ OK
+Tp3T    CPU P-Core               56.8°C  ✅ OK
+Tp3W    CPU P-Core               56.4°C  ✅ OK
+Tp3X    CPU P-Core               72.5°C  ✅ OK
+Ts00    SSD                      44.4°C  ✅ OK
+Ts01    SSD                      44.4°C  ✅ OK
+Ts02    SSD                      45.9°C  ✅ OK
+Ts0C    SSD                      43.1°C  ✅ OK
+Ts0D    SSD                      43.1°C  ✅ OK
+Ts0E    SSD                      43.6°C  ✅ OK
+Ts0K    SSD                      43.0°C  ✅ OK
+Ts0L    SSD                      43.0°C  ✅ OK
+Ts0M    SSD                      43.4°C  ✅ OK
+Ts0P    SSD                      27.7°C  ✅ OK
+Ts0Y    SSD                      43.8°C  ✅ OK
+Ts0Z    SSD                      43.8°C  ✅ OK
+Ts0a    SSD                      45.9°C  ✅ OK
+Ts0h    SSD                      44.4°C  ✅ OK
+Ts0i    SSD                      45.9°C  ✅ OK
+Ts1P    SSD                      26.1°C  ✅ OK
+Tz11    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz12    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz13    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz14    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz15    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz16    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz17    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz18    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+Tz1j    Other                     0.0°C  ⚠ FILTERED (≤0°C)
+
+Total SMC temperature keys: 243 (filtered: 28, active: 215)
+Note: When HID sensors are available, SMC core keys (Tp/Te/Tf/Tg/TR) are
+      replaced by per-physical-core HID sensors for accuracy.
+
+=== Core Configuration ===
+CPU temp keys (Tp*/Te*): 61
+GPU temp keys (Tg*):     18
+  CPU[0] = Te04  45.8°C
+  CPU[1] = Te05  51.6°C
+  CPU[2] = Te06  57.6°C
+  CPU[3] = Te0G  44.4°C
+  CPU[4] = Te0H  50.2°C
+  CPU[5] = Te0I  55.2°C
+  CPU[6] = Te0P  52.3°C
+  CPU[7] = Te0Q  57.6°C
+  CPU[8] = Te0R  43.7°C
+  CPU[9] = Te0S  51.7°C
+  CPU[10] = Te0T  58.0°C
+  CPU[11] = Te0U  52.2°C
+  CPU[12] = Te0V  58.0°C
+  CPU[13] = Tp04  50.1°C
+  CPU[14] = Tp05  56.7°C
+  CPU[15] = Tp06  61.1°C
+  CPU[16] = Tp0C  50.0°C
+  CPU[17] = Tp0D  56.6°C
+  CPU[18] = Tp0E  59.6°C
+  CPU[19] = Tp0K  49.5°C
+  CPU[20] = Tp0L  56.1°C
+  CPU[21] = Tp0M  59.0°C
+  CPU[22] = Tp0R  49.6°C
+  CPU[23] = Tp0S  56.2°C
+  CPU[24] = Tp0T  59.4°C
+  CPU[25] = Tp0U  53.0°C
+  CPU[26] = Tp0V  60.9°C
+  CPU[27] = Tp0W  68.3°C
+  CPU[28] = Tp0a  53.0°C
+  CPU[29] = Tp0b  60.9°C
+  CPU[30] = Tp0c  67.3°C
+  CPU[31] = Tp0g  50.7°C
+  CPU[32] = Tp0h  58.6°C
+  CPU[33] = Tp0i  64.2°C
+  CPU[34] = Tp0m  51.0°C
+  CPU[35] = Tp0n  58.9°C
+  CPU[36] = Tp0o  64.2°C
+  CPU[37] = Tp0u  50.8°C
+  CPU[38] = Tp0v  60.1°C
+  CPU[39] = Tp0w  56.2°C
+  CPU[40] = Tp0y  51.1°C
+  CPU[41] = Tp0z  60.4°C
+  CPU[42] = Tp10  56.8°C
+  CPU[43] = Tp16  49.9°C
+  CPU[44] = Tp17  56.5°C
+  CPU[45] = Tp18  59.2°C
+  CPU[46] = Tp1E  50.2°C
+  CPU[47] = Tp1F  56.8°C
+  CPU[48] = Tp1G  59.4°C
+  CPU[49] = Tp1I  52.4°C
+  CPU[50] = Tp1J  60.3°C
+  CPU[51] = Tp1K  72.5°C
+  CPU[52] = Tp1Q  52.3°C
+  CPU[53] = Tp1R  60.2°C
+  CPU[54] = Tp1S  69.0°C
+  CPU[55] = Tp3O  57.0°C
+  CPU[56] = Tp3P  68.3°C
+  CPU[57] = Tp3S  55.1°C
+  CPU[58] = Tp3T  56.8°C
+  CPU[59] = Tp3W  56.4°C
+  CPU[60] = Tp3X  72.5°C
+  GPU[0] = Tg00  43.2°C
+  GPU[1] = Tg01  48.0°C
+  GPU[2] = Tg04  43.7°C
+  GPU[3] = Tg05  51.0°C
+  GPU[4] = Tg0C  42.5°C
+  GPU[5] = Tg0D  49.8°C
+  GPU[6] = Tg0K  42.7°C
+  GPU[7] = Tg0L  50.0°C
+  GPU[8] = Tg0U  42.9°C
+  GPU[9] = Tg0V  50.2°C
+  GPU[10] = Tg0u  43.0°C
+  GPU[11] = Tg0v  50.3°C
+  GPU[12] = Tg12  43.2°C
+  GPU[13] = Tg13  50.5°C
+  GPU[14] = Tg1A  42.9°C
+  GPU[15] = Tg1B  50.2°C
+  GPU[16] = Tg1k  43.3°C
+  GPU[17] = Tg1l  50.6°C
