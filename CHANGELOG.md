@@ -11,6 +11,18 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ### Fixed
 
+- **Disk I/O rate uses the real sample interval** — the rate was computed against a
+  fixed 6s window, so a late timer tick (sleep/wake) overstated it, by about 7x in
+  testing. It now divides by the measured interval. ([#17](https://github.com/ryyansafar/MacMonitor/pull/17))
+- **Battery charge rate only shows while charging** — it no longer reports a rate
+  while the battery is discharging. ([#18](https://github.com/ryyansafar/MacMonitor/pull/18))
+- **No battery section on battery-less desktops** — Apple Silicon Macs without a
+  battery no longer show bogus battery data. ([#19](https://github.com/ryyansafar/MacMonitor/pull/19))
+- **Less WindowServer activity** — the status item only redraws when its title or
+  tooltip actually changes. ([#33](https://github.com/ryyansafar/MacMonitor/pull/33))
+- **CPU core topology on newer Apple Silicon** — cores are detected from the
+  `hw.nperflevels` sysctls and shown as labelled per-core tiles instead of
+  cluster averages. ([#7](https://github.com/ryyansafar/MacMonitor/pull/7))
 - **Light appearance is readable** — yellow text (thermal "Fair", CPU and GPU power,
   the TOTAL power tile, moderate CPU load in Top Processes) was drawn in Apple's
   dark-mode yellow, which measures 1.2:1 against the light window background; WCAG AA
@@ -27,6 +39,11 @@ Dates: ISO 8601 (YYYY-MM-DD)
 - **Configurable menu bar metrics** — choose and reorder CPU, memory, network,
   disk I/O, power, and battery readings while preserving the existing detailed
   indicator as the default.
+
+### Data
+
+- Added M3 Pro (Mac15,7, macOS 26.6.2) sensor scan output to `sensor-research/`.
+  ([#30](https://github.com/ryyansafar/MacMonitor/pull/30))
 
 ---
 
