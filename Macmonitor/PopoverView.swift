@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import ServiceManagement
 import WidgetKit
@@ -78,22 +79,22 @@ private struct HelperMissingBanner: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(Color(hex: "FF9F0A"))
+                .foregroundColor(Palette.orange)
                 .font(.system(size: 11))
             VStack(alignment: .leading, spacing: 1) {
                 Text("System helper not installed")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(hex: "FF9F0A"))
+                    .foregroundColor(Palette.orange)
                 Text("Run Install.command from the DMG to enable GPU, temps, and power data.")
                     .font(.system(size: 10))
-                    .foregroundColor(Color(hex: "888899"))
+                    .foregroundColor(Palette.dim)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Color(hex: "FF9F0A").opacity(0.08))
+        .background(Palette.orange.opacity(0.08))
     }
 }
 
@@ -106,9 +107,9 @@ private struct Header: View {
 
     var thermalColor: Color {
         switch model.thermalState {
-        case "Normal":   return Color(hex: "30D158")
-        case "Fair":     return Color(hex: "FFD60A")
-        default:         return Color(hex: "FF453A")
+        case "Normal":   return Palette.green
+        case "Fair":     return Palette.yellow
+        default:         return Palette.red
         }
     }
 
@@ -138,11 +139,11 @@ private struct Header: View {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "gearshape")
                         .font(.system(size: 13))
-                        .foregroundColor(Color(hex: "888899"))
+                        .foregroundColor(Palette.dim)
                         .padding(.leading, 12)
                     if updater.updateAvailable {
                         Circle()
-                            .fill(Color(hex: "FF9F0A"))
+                            .fill(Palette.orange)
                             .frame(width: 7, height: 7)
                             .offset(x: -2, y: 1)
                     }
@@ -164,15 +165,15 @@ private struct CPUSection: View {
             Row(label: "Overall") { StatBar(pct: model.cpuUsage) }
             if model.eCoreCount > 0 {
                 Row(label: "E-cluster  \(model.eCoresMHz) MHz") {
-                    StatBar(pct: model.eCoresPct, color: Color(hex: "64D2FF"))
+                    StatBar(pct: model.eCoresPct, color: Palette.cyan)
                 }
                 Row(label: "P-cluster  \(model.pCoresMHz) MHz") {
-                    StatBar(pct: model.pCoresPct, color: Color(hex: "BF5AF2"))
+                    StatBar(pct: model.pCoresPct, color: Palette.purple)
                 }
                 // M5+ Super cluster — only shown when present
                 if model.sClusterPct > 0 || model.sClusterMHz > 0 {
                     Row(label: "S-cluster  \(model.sClusterMHz) MHz") {
-                        StatBar(pct: model.sClusterPct, color: Color(hex: "FF6B6B"))
+                        StatBar(pct: model.sClusterPct, color: Palette.coral)
                     }
                 }
             }
@@ -194,7 +195,7 @@ private struct CPUSection: View {
                 }
                 Spacer()
                 Pill(icon: "bolt", val: String(format: "%.2f W", model.cpuPower),
-                     color: Color(hex: "FFD60A"))
+                     color: Palette.yellow)
             }
             .padding(.top, 2)
         }
@@ -226,14 +227,14 @@ private struct GPUSection: View {
     var body: some View {
         SectionBox(icon: "rectangle.3.group", title: "GPU  ·  \(model.gpuCoreCount) cores") {
             Row(label: "\(model.gpuMHz) MHz") {
-                StatBar(pct: model.gpuUsage, color: Color(hex: "FF9F0A"))
+                StatBar(pct: model.gpuUsage, color: Palette.orange)
             }
             HStack {
                 Pill(icon: "thermometer", val: String(format: "%.0f°C", model.gpuTemp),
                      color: tempColor(model.gpuTemp))
                 Spacer()
                 Pill(icon: "bolt", val: String(format: "%.3f W", model.gpuPower),
-                     color: Color(hex: "FFD60A"))
+                     color: Palette.yellow)
             }
             .padding(.top, 2)
         }
@@ -247,7 +248,7 @@ private struct MemorySection: View {
     var body: some View {
         SectionBox(icon: "memorychip", title: "Memory") {
             Row(label: "\(fmtB(model.memUsed)) / \(fmtB(model.memTotal))") {
-                StatBar(pct: model.memPct, color: Color(hex: "0A84FF"))
+                StatBar(pct: model.memPct, color: Palette.blue)
             }
             HStack(spacing: 16) {
                 KV("DRAM BW",  String(format: "%.1f GB/s", model.dramBW))
@@ -271,9 +272,9 @@ private struct BatterySection: View {
     }
 
     var batteryColor: Color {
-        model.batteryPct < 20 ? Color(hex: "FF453A")
+        model.batteryPct < 20 ? Palette.red
             : (model.batteryCharging || model.batteryCharged)
-                ? Color(hex: "30D158") : Color(hex: "FFD60A")
+                ? Palette.green : Palette.yellow
     }
 
     var body: some View {
@@ -316,13 +317,13 @@ private struct NetworkDiskSection: View {
     var body: some View {
         HStack(spacing: 0) {
             SectionBox(icon: "wifi", title: "Network") {
-                IORow(icon: "arrow.down", val: fmtB(model.netInBps)  + "/s", color: Color(hex:"30D158"))
-                IORow(icon: "arrow.up",   val: fmtB(model.netOutBps) + "/s", color: Color(hex:"FF9F0A"))
+                IORow(icon: "arrow.down", val: fmtB(model.netInBps)  + "/s", color: Palette.green)
+                IORow(icon: "arrow.up",   val: fmtB(model.netOutBps) + "/s", color: Palette.orange)
             }
             Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
             SectionBox(icon: "internaldrive", title: "Disk I/O") {
-                IORow(icon: "arrow.down", val: String(format: "%.0f KB/s", model.diskReadKBs),  color: Color(hex:"64D2FF"))
-                IORow(icon: "arrow.up",   val: String(format: "%.0f KB/s", model.diskWriteKBs), color: Color(hex:"FF9F0A"))
+                IORow(icon: "arrow.down", val: String(format: "%.0f KB/s", model.diskReadKBs),  color: Palette.cyan)
+                IORow(icon: "arrow.up",   val: String(format: "%.0f KB/s", model.diskWriteKBs), color: Palette.orange)
             }
         }
     }
@@ -365,11 +366,11 @@ private struct PowerTile: View {
         HStack {
             Text(label)
                 .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(highlight ? Color(hex:"FFD60A") : Color(hex:"888899"))
+                .foregroundColor(highlight ? Palette.yellow : Palette.dim)
             Spacer()
             Text(String(format: val >= 1 ? "%.2f W" : "%.3f W", val))
                 .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(highlight ? Color(hex:"FFD60A") : .primary)
+                .foregroundColor(highlight ? Palette.yellow : .primary)
         }
         .padding(.horizontal, 8).padding(.vertical, 5)
         .background(Color.primary.opacity(highlight ? 0.07 : 0.03))
@@ -402,14 +403,14 @@ private struct ProcessSection: View {
                         .frame(width: 40, alignment: .trailing)
                     Text(fmtB(p.mem))
                         .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(Color(hex: "64D2FF"))
+                        .foregroundColor(Palette.cyan)
                         .frame(width: 64, alignment: .trailing)
                 }
             }
         }
     }
     func cpuClr(_ v: Double) -> Color {
-        v >= 50 ? Color(hex:"FF453A") : v >= 20 ? Color(hex:"FFD60A") : Color(hex:"30D158")
+        v >= 50 ? Palette.red : v >= 20 ? Palette.yellow : Palette.green
     }
 }
 
@@ -431,7 +432,7 @@ private struct FooterBar: View {
                     .frame(maxWidth: .infinity)
                     .font(.system(size: 12, weight: .medium))
             }
-            .buttonStyle(.borderedProminent).tint(Color(hex: "FF9F0A")).disabled(working)
+            .buttonStyle(.borderedProminent).tint(Palette.orange).disabled(working)
 
             Button { NSApp.terminate(nil) } label: {
                 Text("Quit").frame(maxWidth: .infinity)
@@ -459,7 +460,7 @@ struct SettingsSheet: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Toggle("CPU Percentage Only", isOn: $cpuOnlyMenuBar)
-                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+                    .toggleStyle(SwitchToggleStyle(tint: Palette.green))
                 Text("Show a compact value such as 12% in the menu bar.")
                     .font(.system(size: 11)).foregroundColor(.secondary)
             }
@@ -480,7 +481,7 @@ struct SettingsSheet: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Toggle("Open at Login", isOn: $openAtLogin)
-                    .toggleStyle(SwitchToggleStyle(tint: Color(hex: "30D158")))
+                    .toggleStyle(SwitchToggleStyle(tint: Palette.green))
                     .onChange(of: openAtLogin) { enabled in
                         if enabled {
                             try? SMAppService.mainApp.register()
@@ -520,23 +521,23 @@ struct SettingsSheet: View {
                         case .idle:
                             if updater.updateAvailable {
                                 Text("v\(updater.latestVersion) available")
-                                    .foregroundColor(Color(hex: "FF9F0A"))
+                                    .foregroundColor(Palette.orange)
                             } else {
                                 Text("Apple Silicon  ·  macOS 13+  ·  MIT")
                                     .foregroundColor(.secondary)
                             }
                         case .downloading:
                             Text("Downloading v\(updater.latestVersion)…")
-                                .foregroundColor(Color(hex: "FF9F0A"))
+                                .foregroundColor(Palette.orange)
                         case .installing:
                             Text("Installing…")
-                                .foregroundColor(Color(hex: "FF9F0A"))
+                                .foregroundColor(Palette.orange)
                         case .readyToRelaunch:
                             Text("Ready — relaunch to apply")
-                                .foregroundColor(Color(hex: "30D158"))
+                                .foregroundColor(Palette.green)
                         case .failed(let msg):
                             Text(msg)
-                                .foregroundColor(Color(hex: "FF453A"))
+                                .foregroundColor(Palette.red)
                         }
                     }
                     .font(.system(size: 10))
@@ -549,18 +550,18 @@ struct SettingsSheet: View {
                             if updater.updateAvailable {
                                 Button("Update") { updater.startUpdate() }
                                     .buttonStyle(.borderedProminent)
-                                    .tint(Color(hex: "FF9F0A"))
+                                    .tint(Palette.orange)
                                     .font(.system(size: 12, weight: .semibold))
                             }
                             Button("Done") { isPresented = false }
                                 .buttonStyle(.borderedProminent)
-                                .tint(Color(hex: "0A84FF"))
+                                .tint(Palette.blue)
                         }
                     case .downloading:
                         VStack(alignment: .trailing, spacing: 3) {
                             ProgressView(value: updater.downloadFraction)
                                 .progressViewStyle(.linear)
-                                .tint(Color(hex: "FF9F0A"))
+                                .tint(Palette.orange)
                                 .frame(width: 80)
                             Text("\(Int(updater.downloadFraction * 100))%")
                                 .font(.system(size: 10, design: .monospaced))
@@ -569,11 +570,11 @@ struct SettingsSheet: View {
                     case .installing:
                         ProgressView()
                             .scaleEffect(0.75)
-                            .tint(Color(hex: "FF9F0A"))
+                            .tint(Palette.orange)
                     case .readyToRelaunch:
                         Button("Relaunch") { updater.relaunch() }
                             .buttonStyle(.borderedProminent)
-                            .tint(Color(hex: "30D158"))
+                            .tint(Palette.green)
                             .font(.system(size: 12, weight: .semibold))
                     case .failed:
                         Button("Dismiss") { updater.dismissUpdateError() }
@@ -599,10 +600,10 @@ private struct SectionBox<Content: View>: View {
             HStack(spacing: 5) {
                 Image(systemName: icon)
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(Color(hex: "888899"))
+                    .foregroundColor(Palette.dim)
                 Text(title.uppercased())
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundColor(Color(hex: "888899")).tracking(0.6)
+                    .foregroundColor(Palette.dim).tracking(0.6)
             }
             content
         }
@@ -623,9 +624,9 @@ private struct Row<R: View>: View {
 }
 
 private struct StatBar: View {
-    let pct: Int; var color: Color = Color(hex: "30D158")
+    let pct: Int; var color: Color = Palette.green
     private var barColor: Color {
-        pct >= 85 ? Color(hex:"FF453A") : pct >= 60 ? Color(hex:"FFD60A") : color
+        pct >= 85 ? Palette.red : pct >= 60 ? Palette.yellow : color
     }
     var body: some View {
         HStack(spacing: 6) {
@@ -647,15 +648,18 @@ private struct StatBar: View {
 
 private struct CoreTile: View {
     let index: Int; let pct: Double; let isE: Bool
+    @Environment(\.colorScheme) var colorScheme
     var color: Color {
-        pct >= 85 ? Color(hex:"FF453A") : pct >= 60 ? Color(hex:"FFD60A")
-            : (isE ? Color(hex:"64D2FF") : Color(hex:"BF5AF2"))
+        pct >= 85 ? Palette.red : pct >= 60 ? Palette.yellow
+            : (isE ? Palette.cyan : Palette.purple)
     }
     var body: some View {
         HStack(spacing: 5) {
             Text("C\(index)")
                 .font(.system(size: 9, design: .monospaced))
-                .foregroundColor(color.opacity(0.7))
+                // Dimmed in Dark mode only: at 70% the Light values fall to about 3:1
+                // against the window background, under the 4.5:1 text minimum.
+                .foregroundColor(color.opacity(colorScheme == .dark ? 0.7 : 1))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(width: 22, alignment: .leading)
@@ -712,11 +716,58 @@ private func fmtB(_ b: Int64) -> String {
 }
 
 private func tempColor(_ t: Double) -> Color {
-    t >= 80 ? Color(hex:"FF453A") : t >= 65 ? Color(hex:"FFD60A") : Color(hex:"888899")
+    t >= 80 ? Palette.red : t >= 65 ? Palette.yellow : Palette.dim
+}
+
+// MARK: - Palette
+
+/// Accent colours for the dashboard, settings and welcome window.
+///
+/// Each colour resolves per appearance, the same way the `windowBackgroundColor`
+/// background does, so it follows both Automatic and the Light/Dark override.
+///
+/// The dark values are the colours the app has always used, so Dark mode is unchanged.
+/// They are Apple's dark-mode system colours, which are far too light on a light
+/// background (yellow measured 1.2:1 on the window, 1.0:1 on the TOTAL tile). Each
+/// light value is a darker shade that clears WCAG AA (4.5:1) as text on every light
+/// surface it is drawn on, including the TOTAL power tile and the helper banner.
+/// Check any new pair the same way before using it for text.
+enum Palette {
+    static let green  = Color(light: 0x1B7932, dark: 0x30D158)
+    static let yellow = Color(light: 0x825600, dark: 0xFFD60A)
+    static let orange = Color(light: 0xA64300, dark: 0xFF9F0A)
+    static let red    = Color(light: 0xD40C00, dark: 0xFF453A)
+    static let cyan   = Color(light: 0x00719F, dark: 0x64D2FF)
+    static let purple = Color(light: 0x8944AB, dark: 0xBF5AF2)
+    static let blue   = Color(light: 0x0067D0, dark: 0x0A84FF)
+    static let coral  = Color(light: 0xCC1D49, dark: 0xFF6B6B)
+    /// Section titles, tile labels and idle readings.
+    static let dim    = Color(light: 0x606070, dark: 0x888899)
+}
+
+extension Color {
+    /// A colour with separate light and dark values, resolved by AppKit at draw time.
+    init(light: UInt32, dark: UInt32) {
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(rgb: dark) : NSColor(rgb: light)
+        })
+    }
+}
+
+private extension NSColor {
+    convenience init(rgb: UInt32) {
+        self.init(srgbRed: CGFloat((rgb >> 16) & 0xFF) / 255,
+                  green:   CGFloat((rgb >>  8) & 0xFF) / 255,
+                  blue:    CGFloat( rgb        & 0xFF) / 255,
+                  alpha:   1)
+    }
 }
 
 // MARK: - Hex colour helper
 
+// Fixed colours: they look the same in Light and Dark. Use Palette for anything that
+// sits on the window background.
 extension Color {
     init(hex: String) {
         let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

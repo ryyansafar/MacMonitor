@@ -18,7 +18,7 @@ struct WelcomeView: View {
                 HStack(spacing: 6) {
                     ForEach(0..<3) { i in
                         Capsule()
-                            .fill(i == step ? Color(hex:"0A84FF") : Color.primary.opacity(0.12))
+                            .fill(i == step ? Palette.blue : Color.primary.opacity(0.12))
                             .frame(width: i == step ? 20 : 6, height: 6)
                             .animation(.easeInOut(duration: 0.3), value: step)
                     }
@@ -56,7 +56,7 @@ struct WelcomeView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color(hex: "0A84FF"))
+                    .tint(Palette.blue)
                     .font(.system(size: 13, weight: .semibold))
                 }
                 .padding(.horizontal, 32)
@@ -76,7 +76,7 @@ private struct StepWelcome: View {
             Image(systemName: "gauge.with.dots.needle.67percent")
                 .font(.system(size: 64, weight: .thin))
                 .foregroundStyle(
-                    LinearGradient(colors: [Color(hex:"0A84FF"), Color(hex:"BF5AF2")],
+                    LinearGradient(colors: [Palette.blue, Palette.purple],
                                    startPoint: .topLeading, endPoint: .bottomTrailing)
                 )
 
@@ -150,13 +150,13 @@ private struct StepPermission: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                PermRow(icon: "cpu",              color: "0A84FF",
+                PermRow(icon: "cpu",              color: Palette.blue,
                         title: "CPU & Memory",    desc: "Read directly from macOS — no password needed.")
-                PermRow(icon: "rectangle.3.group",color: "BF5AF2",
+                PermRow(icon: "rectangle.3.group",color: Palette.purple,
                         title: "GPU & Temps",     desc: "Native SMC + IOReport sensors — no third-party dependencies.")
-                PermRow(icon: "bolt.fill",        color: "FFD60A",
+                PermRow(icon: "bolt.fill",        color: Palette.yellow,
                         title: "Power rails",     desc: "ANE, DRAM, GPU SRAM, total system power.")
-                PermRow(icon: "battery.75percent",color: "30D158",
+                PermRow(icon: "battery.75percent",color: Palette.green,
                         title: "Battery",         desc: "Cycle count, health, charge rate, adapter watts.")
             }
             .padding(.horizontal, 36)
@@ -178,7 +178,7 @@ private struct Feature: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 18))
-                .foregroundColor(Color(hex:"0A84FF"))
+                .foregroundColor(Palette.blue)
             Text(label)
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
@@ -197,7 +197,7 @@ private struct ModeCard: View {
             HStack(spacing: 14) {
                 Image(systemName: icon)
                     .font(.system(size: 22))
-                    .foregroundColor(selected ? Color(hex:"0A84FF") : .secondary)
+                    .foregroundColor(selected ? Palette.blue : .secondary)
                     .frame(width: 32)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
@@ -211,16 +211,16 @@ private struct ModeCard: View {
                 }
                 Spacer()
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selected ? Color(hex:"0A84FF") : .secondary)
+                    .foregroundColor(selected ? Palette.blue : .secondary)
                     .font(.system(size: 18))
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(selected ? Color(hex:"0A84FF").opacity(0.08) : Color.primary.opacity(0.03))
+                    .fill(selected ? Palette.blue.opacity(0.08) : Color.primary.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(selected ? Color(hex:"0A84FF").opacity(0.4) : Color.primary.opacity(0.08))
+                            .stroke(selected ? Palette.blue.opacity(0.4) : Color.primary.opacity(0.08))
                     )
             )
         }
@@ -230,14 +230,14 @@ private struct ModeCard: View {
 }
 
 private struct PermRow: View {
-    let icon: String; let color: String
+    let icon: String; let color: Color
     let title: String; let desc: String
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(Color(hex: color))
+                .foregroundColor(color)
                 .frame(width: 20)
                 .padding(.top, 1)
             VStack(alignment: .leading, spacing: 2) {

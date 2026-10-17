@@ -7,6 +7,20 @@ Dates: ISO 8601 (YYYY-MM-DD)
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **Light appearance is readable** — yellow text (thermal "Fair", CPU and GPU power,
+  the TOTAL power tile, moderate CPU load in Top Processes) was drawn in Apple's
+  dark-mode yellow, which measures 1.2:1 against the light window background; WCAG AA
+  asks for 4.5:1. Orange, green, cyan and the grey section titles had the same problem.
+  Every accent in the dashboard, settings and welcome window now has separate light
+  and dark values, and each light value clears 4.5:1 as text. Dark mode is unchanged.
+  ([#29](https://github.com/ryyansafar/MacMonitor/issues/29))
+
+---
+
 ## [2.0.5] — 2026-08-06
 
 ### The "Widget Actually Exists" Release
