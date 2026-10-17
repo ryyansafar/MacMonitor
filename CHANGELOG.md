@@ -19,6 +19,12 @@ Dates: ISO 8601 (YYYY-MM-DD)
   and dark values, and each light value clears 4.5:1 as text. Dark mode is unchanged.
   ([#29](https://github.com/ryyansafar/MacMonitor/issues/29))
 
+### Added
+
+- **Per-process I/O rankings** — the main dashboard's Top Processes section can now
+  switch between CPU/memory, disk read/write rates, and network download/upload rates.
+  Sampling runs on a dedicated serial queue and does not add process sampling to the widget.
+
 ---
 
 ## [2.0.5] — 2026-08-06
