@@ -24,6 +24,9 @@ Dates: ISO 8601 (YYYY-MM-DD)
 - **Per-process I/O rankings** — the main dashboard's Top Processes section can now
   switch between CPU/memory, disk read/write rates, and network download/upload rates.
   Sampling runs on a dedicated serial queue and does not add process sampling to the widget.
+- **Configurable menu bar metrics** — choose and reorder CPU, memory, network,
+  disk I/O, power, and battery readings while preserving the existing detailed
+  indicator as the default.
 
 ---
 

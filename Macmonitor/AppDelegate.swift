@@ -21,12 +21,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     // Subscribe to model changes so the label updates in sync with each tick,
     // not on a separate independent timer that may fire before data is ready.
     private var cancellables = Set<AnyCancellable>()
-    private var lastCPU = 0
-    private var lastMem = 0
-    private var lastTemp = 0.0
     private var isCPUOnlyMenuBar = false
     private static let cpuOnlyMenuBarLength: CGFloat = 48
-    private static let fullMenuBarLength: CGFloat = 176
+    private var menuBarSnapshot = MenuBarSnapshot()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -43,11 +40,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         Publishers.CombineLatest3(model.$cpuUsage, model.$memPct, model.$cpuTemp)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] cpu, mem, temp in
-                self?.lastCPU = cpu
-                self?.lastMem = mem
-                self?.lastTemp = temp
-                self?.updateLabel(cpu: cpu, mem: mem, temp: temp)
+                self?.menuBarSnapshot.cpuUsage = cpu
+                self?.menuBarSnapshot.memoryPercent = mem
+                self?.menuBarSnapshot.cpuTemperature = temp
+                self?.updateLabel()
                 self?.refreshWidgetsIfDue()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$netInBps, model.$netOutBps)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] incoming, outgoing in
+                self?.menuBarSnapshot.networkInBytesPerSecond = incoming
+                self?.menuBarSnapshot.networkOutBytesPerSecond = outgoing
+                self?.updateLabel()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$diskReadKBs, model.$diskWriteKBs)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] read, write in
+                self?.menuBarSnapshot.diskReadKilobytesPerSecond = read
+                self?.menuBarSnapshot.diskWriteKilobytesPerSecond = write
+                self?.updateLabel()
+            }
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(model.$totalPower, model.$batteryPct)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] power, battery in
+                self?.menuBarSnapshot.totalPower = power
+                self?.menuBarSnapshot.batteryPercent = battery
+                self?.updateLabel()
             }
             .store(in: &cancellables)
 
@@ -59,9 +83,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
                 guard isCPUOnly != self.isCPUOnlyMenuBar else { return }
                 self.isCPUOnlyMenuBar = isCPUOnly
                 self.statusItem?.length = isCPUOnly
-                    ? Self.cpuOnlyMenuBarLength : Self.fullMenuBarLength
-                self.updateLabel(cpu: self.lastCPU, mem: self.lastMem, temp: self.lastTemp)
+                    ? Self.cpuOnlyMenuBarLength : NSStatusItem.variableLength
+                self.updateLabel()
             }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .menuBarLayoutChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateLabel() }
             .store(in: &cancellables)
 
         // Restore Open at Login state on launch
@@ -87,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(
             withLength: isCPUOnlyMenuBar
-                ? Self.cpuOnlyMenuBarLength : Self.fullMenuBarLength
+                ? Self.cpuOnlyMenuBarLength : NSStatusItem.variableLength
         )
         if let btn = statusItem?.button {
             btn.title  = "🟢 CPU --%  MEM --%"
@@ -103,21 +132,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         popover.delegate    = self
     }
 
-    private func updateLabel(cpu: Int, mem: Int, temp: Double) {
+    private func updateLabel() {
         guard let btn = statusItem?.button else { return }
         if isCPUOnlyMenuBar {
-            let title = "\(cpu)%"
-            let tooltip = "CPU usage: \(cpu)%"
+            let title = "\(menuBarSnapshot.cpuUsage)%"
+            let tooltip = "CPU usage: \(menuBarSnapshot.cpuUsage)%"
             if btn.title != title { btn.title = title }
             if btn.toolTip != tooltip { btn.toolTip = tooltip }
             return
         }
-        let dot = cpu >= 85 || mem >= 85 ? "🔴"
-                : cpu >= 60 || mem >= 60 ? "🟡" : "🟢"
-        let tempStr = temp > 0 ? String(format: " %.0f°", temp) : ""
-        let title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
+        let tooltip = "MacMonitor — CPU \(menuBarSnapshot.cpuUsage)%, Memory \(menuBarSnapshot.memoryPercent)%"
+        let dot = menuBarSnapshot.cpuUsage >= 85 || menuBarSnapshot.memoryPercent >= 85 ? "🔴"
+                : menuBarSnapshot.cpuUsage >= 60 || menuBarSnapshot.memoryPercent >= 60 ? "🟡" : "🟢"
+        let fragments = MenuBarLayoutStore.visibleMetrics().compactMap {
+            $0.titleFragment(snapshot: menuBarSnapshot)
+        }
+        let title = fragments.isEmpty ? dot : "\(dot) \(fragments.joined(separator: "  "))"
+        // Only write when something changed: every write invalidates the status
+        // item's window and wakes WindowServer.
         if btn.title != title { btn.title = title }
-        if btn.toolTip != "MacMonitor" { btn.toolTip = "MacMonitor" }
+        if btn.toolTip != tooltip { btn.toolTip = tooltip }
     }
 
     // MARK: - Click handling
@@ -343,7 +377,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         }
 
         let win = NSWindow(
-            contentRect:  NSRect(x: 0, y: 0, width: 360, height: 460),
+            contentRect:  NSRect(x: 0, y: 0, width: 400, height: 560),
             styleMask:    [.titled, .closable, .fullSizeContentView],
             backing:      .buffered,
             defer:        false
