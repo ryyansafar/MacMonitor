@@ -9,6 +9,13 @@ static NSDictionary *collectMetrics(void) {
         SMCClose(conn);
     }
 
+    NSMutableArray *cpuCoreActive = [NSMutableArray arrayWithCapacity:data.cpuCoreCount];
+    NSMutableArray *cpuCoreKinds = [NSMutableArray arrayWithCapacity:data.cpuCoreCount];
+    for (int32_t index = 0; index < data.cpuCoreCount && index < MACMONITOR_MAX_CPU_CORES; index++) {
+        [cpuCoreActive addObject:@(data.cpuCoreActive[index])];
+        [cpuCoreKinds addObject:@(data.cpuCoreKind[index])];
+    }
+
     return @{
         @"cpuTemp": @(data.cpuTemp),
         @"cpuDieHotspot": @(data.cpuDieHotspot),
@@ -22,8 +29,12 @@ static NSDictionary *collectMetrics(void) {
         @"gpuFreqMHz": @(data.gpuFreqMHz),
         @"eClusterActive": @(data.eClusterActive),
         @"pClusterActive": @(data.pClusterActive),
+        @"sClusterActive": @(data.sClusterActive),
         @"eClusterFreqMHz": @(data.eClusterFreqMHz),
         @"pClusterFreqMHz": @(data.pClusterFreqMHz),
+        @"sClusterFreqMHz": @(data.sClusterFreqMHz),
+        @"cpuCoreActive": cpuCoreActive,
+        @"cpuCoreKinds": cpuCoreKinds,
         @"dramReadBytes": @(data.dramReadBytes),
         @"dramWriteBytes": @(data.dramWriteBytes),
         @"fanRPM": @(data.fanRPM)
