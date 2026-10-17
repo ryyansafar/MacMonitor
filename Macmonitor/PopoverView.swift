@@ -42,8 +42,10 @@ struct PopoverView: View {
                 }
                 sep
                 MemorySection(model: model)
-                sep
-                BatterySection(model: model)
+                if model.hasBattery {
+                    sep
+                    BatterySection(model: model)
+                }
                 sep
                 NetworkDiskSection(model: model)
                 sep

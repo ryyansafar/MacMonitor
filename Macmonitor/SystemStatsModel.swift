@@ -62,6 +62,7 @@ class SystemStatsModel: ObservableObject {
     @Published var diskWriteKBs:Double  = 0
 
     // Battery — every field
+    @Published var hasBattery:       Bool    = true  // false on battery-less desktops (Mac mini/Studio/iMac/Mac Pro)
     @Published var batteryPct:       Int     = 0
     @Published var batteryCharging:  Bool    = false
     @Published var batteryCharged:   Bool    = false
@@ -347,6 +348,7 @@ class SystemStatsModel: ObservableObject {
 
             // ── pmset -g batt ──
             let batt = self.shell("/usr/bin/pmset", ["-g", "batt"])
+            let hasBattery = batt.contains("InternalBattery")
             let onAC      = batt.contains("AC Power")
             let charging  = batt.contains("charging") && !batt.contains("discharging")
             let charged   = batt.contains("charged") || batt.contains("finishing charge")
@@ -404,6 +406,7 @@ class SystemStatsModel: ObservableObject {
 
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
+                self.hasBattery        = hasBattery
                 self.batteryPct        = pct
                 self.batteryCharging   = charging
                 self.batteryCharged    = charged
