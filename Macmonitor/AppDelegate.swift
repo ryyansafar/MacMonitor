@@ -25,6 +25,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     private var lastMem = 0
     private var lastTemp = 0.0
     private var isCPUOnlyMenuBar = false
+    private static let cpuOnlyMenuBarLength: CGFloat = 48
+    private static let fullMenuBarLength: CGFloat = 176
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -56,6 +58,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
                 let isCPUOnly = UserDefaults.standard.bool(forKey: "cpuOnlyMenuBar")
                 guard isCPUOnly != self.isCPUOnlyMenuBar else { return }
                 self.isCPUOnlyMenuBar = isCPUOnly
+                self.statusItem?.length = isCPUOnly
+                    ? Self.cpuOnlyMenuBarLength : Self.fullMenuBarLength
                 self.updateLabel(cpu: self.lastCPU, mem: self.lastMem, temp: self.lastTemp)
             }
             .store(in: &cancellables)
@@ -81,7 +85,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     // MARK: - Menu bar
 
     private func setupMenuBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(
+            withLength: isCPUOnlyMenuBar
+                ? Self.cpuOnlyMenuBarLength : Self.fullMenuBarLength
+        )
         if let btn = statusItem?.button {
             btn.title  = "🟢 CPU --%  MEM --%"
             btn.toolTip = "MacMonitor"
@@ -94,23 +101,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         popover.behavior    = .transient
         popover.animates    = true
         popover.delegate    = self
-        popover.contentViewController = NSHostingController(
-            rootView: PopoverView(model: model)
-        )
     }
 
     private func updateLabel(cpu: Int, mem: Int, temp: Double) {
         guard let btn = statusItem?.button else { return }
         if isCPUOnlyMenuBar {
-            btn.title = "\(cpu)%"
-            btn.toolTip = "CPU usage: \(cpu)%"
+            let title = "\(cpu)%"
+            let tooltip = "CPU usage: \(cpu)%"
+            if btn.title != title { btn.title = title }
+            if btn.toolTip != tooltip { btn.toolTip = tooltip }
             return
         }
-        btn.toolTip = "MacMonitor"
         let dot = cpu >= 85 || mem >= 85 ? "🔴"
                 : cpu >= 60 || mem >= 60 ? "🟡" : "🟢"
         let tempStr = temp > 0 ? String(format: " %.0f°", temp) : ""
-        btn.title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
+        let title = "\(dot) CPU \(cpu)%\(tempStr)  MEM \(mem)%"
+        if btn.title != title { btn.title = title }
+        if btn.toolTip != "MacMonitor" { btn.toolTip = "MacMonitor" }
     }
 
     // MARK: - Click handling
@@ -127,6 +134,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            if popover.contentViewController == nil {
+                popover.contentViewController = NSHostingController(
+                    rootView: PopoverView(model: model)
+                )
+            }
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
             beginTrackingAnchor(sender)
@@ -190,10 +202,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
 
         // Only a *vertical* move means the menu bar itself retracted.
         //
-        // The status item uses NSStatusItem.variableLength and its title is rewritten
-        // on every metrics tick, so the label's width changes whenever a value gains or
-        // loses a digit. Menu bar items are laid out from the right, so a width change
-        // shifts the anchor window's origin.x — which is not a reason to dismiss.
+        // The status item uses a fixed width so title changes do not resize its
+        // menu-bar window. This also keeps the anchor stable while metrics update.
+        // The title is still rewritten when a displayed value changes, but geometry
+        // stays constant and does not trigger a new window-constraint transaction.
         // Comparing the full origin here closed the popover roughly once a second and
         // made the dashboard impossible to interact with.
         if let origin = anchorOrigin, abs(anchorWindow.frame.origin.y - origin.y) > 1 {
@@ -239,15 +251,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
 
     // MARK: - Widget refresh
 
-    // Measured, not guessed. chronod honoured app-driven reloads at a strict 30s with
-    // no drops, then at 5s (renders every 5.4-6.4s, zero rejections), so the throttle
-    // was always the bottleneck rather than the system budget. Now 2s.
-    //
-    // This is the floor worth using. Each reload wakes the widget extension, which then
-    // samples CPU over a 0.4s window before rendering, so a shorter interval would keep
-    // that process almost continuously awake for a glanceable snapshot. The dashboard is
-    // the live view; widgets are snapshot-based by design and cannot stream.
-    private static let widgetReloadInterval: TimeInterval = 2
+    // WidgetKit widgets are snapshots, not live views. Each app-driven reload wakes
+    // the extension, and getTimeline() samples CPU over a 0.4-second interval before
+    // rendering. A short cadence keeps chronod and CoreAnimation active continuously,
+    // which can drive WindowServer CPU and invalid-window churn in the menu-bar scene.
+    // Keep automatic refresh well below the dashboard's 2-second metrics cadence.
+    // Users can still use "Refresh Now" for an explicit update.
+    private static let widgetReloadInterval: TimeInterval = 30
 
     /// Pushes a timeline reload to the desktop widget so it tracks the dashboard.
     ///
@@ -270,6 +280,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
 
     func popoverDidClose(_ notification: Notification) {
         endTrackingAnchor()
+        // Release the SwiftUI graph while hidden. It will be recreated on next open.
+        popover.contentViewController = nil
     }
 
     // MARK: - NSWindowDelegate
