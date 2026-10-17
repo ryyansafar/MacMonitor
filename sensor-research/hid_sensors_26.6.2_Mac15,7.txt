@@ -1,0 +1,46 @@
+--- ALL HID TEMPERATURE SENSORS ---
+Sensor: gas gauge battery              | Value: 28.20 °C
+Sensor: PMU tdie4                      | Value: 45.87 °C
+Sensor: PMU tdev2                      | Value: 39.87 °C
+Sensor: PMU tdie9                      | Value: 47.59 °C
+Sensor: PMU tdev5                      | Value: 29.99 °C
+Sensor: PMU tdie5                      | Value: 46.84 °C
+Sensor: PMU tdev1                      | Value: 39.13 °C
+Sensor: PMU tdie1                      | Value: 47.16 °C
+Sensor: PMU tdev3                      | Value: 32.06 °C
+Sensor: PMU tdie1                      | Value: 46.52 °C
+Sensor: PMU tdie7                      | Value: 45.12 °C
+Sensor: PMU tdev3                      | Value: 32.06 °C
+Sensor: PMU tdev1                      | Value: 39.21 °C
+Sensor: gas gauge battery              | Value: 28.00 °C
+Sensor: PMU tdie10                     | Value: 47.48 °C
+Sensor: PMU tdev6                      | Value: 36.38 °C
+Sensor: PMU tdev8                      | Value: 30.59 °C
+Sensor: PMU tdev7                      | Value: 44.33 °C
+Sensor: gas gauge battery              | Value: 28.30 °C
+Sensor: PMU tdie7                      | Value: 45.55 °C
+Sensor: PMU tdie2                      | Value: 47.16 °C
+Sensor: PMU tdie6                      | Value: 46.41 °C
+Sensor: PMU tdev4                      | Value: 29.14 °C
+Sensor: PMU tdev4                      | Value: 29.04 °C
+Sensor: PMU tdie10                     | Value: 46.41 °C
+Sensor: PMU tdie3                      | Value: 47.16 °C
+Sensor: PMU tdev7                      | Value: 44.27 °C
+Sensor: PMU tcal                       | Value: 51.85 °C
+Sensor: PMU tdie5                      | Value: 45.98 °C
+Sensor: PMU tdev2                      | Value: 39.77 °C
+Sensor: PMU tdie3                      | Value: 47.16 °C
+Sensor: PMU tdev6                      | Value: 36.36 °C
+Sensor: gas gauge battery              | Value: 28.30 °C
+Sensor: PMU tdie9                      | Value: 47.16 °C
+Sensor: PMU tdie2                      | Value: 46.30 °C
+Sensor: PMU tdie8                      | Value: 47.70 °C
+Sensor: gas gauge battery              | Value: 28.30 °C
+Sensor: PMU tdie4                      | Value: 46.30 °C
+Sensor: gas gauge battery              | Value: 28.00 °C
+Sensor: PMU tcal                       | Value: 51.85 °C
+Sensor: PMU tdev8                      | Value: 30.61 °C
+Sensor: NAND CH0 temp                  | Value: 28.00 °C
+Sensor: PMU tdie6                      | Value: 46.30 °C
+Sensor: PMU tdie8                      | Value: 47.16 °C
+Sensor: PMU tdev5                      | Value: 30.12 °C
