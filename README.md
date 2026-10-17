@@ -89,6 +89,8 @@ Updates every 2 seconds. One glance tells you if everything is fine.
 
 Settings can also reduce the indicator to a compact CPU-only percentage such as `12%`.
 
+You can also choose and reorder which readings appear (CPU, memory, network, disk I/O, power, battery) from Settings, and the Top Processes section can switch between CPU/memory, disk read/write and network download/upload rankings.
+
 ```
 ● CPU 12%  MEM 47%    →  green dot  — all clear
 ● CPU 62%  MEM 71%    →  yellow dot — moderate load
