@@ -9,7 +9,18 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case dark
 
     var id: String { rawValue }
-    var label: String { rawValue.capitalized }
+    var label: String {
+        L10n.string(titleKey)
+    }
+
+    private var titleKey: String {
+        switch self {
+        case .automatic: return "appearance.automatic"
+        case .light: return "appearance.light"
+        case .dark: return "appearance.dark"
+        }
+    }
+
     var colorScheme: ColorScheme? {
         switch self {
         case .automatic: return nil
@@ -82,10 +93,10 @@ private struct HelperMissingBanner: View {
                 .foregroundColor(Palette.orange)
                 .font(.system(size: 11))
             VStack(alignment: .leading, spacing: 1) {
-                Text("System helper not installed")
+                Text(L10n.string("dashboard.helper.title"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Palette.orange)
-                Text("Run Install.command from the DMG to enable GPU, temps, and power data.")
+                Text(L10n.string("dashboard.helper.message"))
                     .font(.system(size: 10))
                     .foregroundColor(Palette.dim)
                     .fixedSize(horizontal: false, vertical: true)
@@ -107,9 +118,9 @@ private struct Header: View {
 
     var thermalColor: Color {
         switch model.thermalState {
-        case "Normal":   return Palette.green
-        case "Fair":     return Palette.yellow
-        default:         return Palette.red
+        case .normal:   return Palette.green
+        case .fair:     return Palette.yellow
+        case .serious, .critical: return Palette.red
         }
     }
 
@@ -121,7 +132,7 @@ private struct Header: View {
                     .foregroundColor(.primary)
                 HStack(spacing: 5) {
                     Circle().fill(thermalColor).frame(width: 6, height: 6)
-                    Text(model.thermalState)
+                    Text(L10n.string(model.thermalState.titleKey))
                         .font(.system(size: 11))
                         .foregroundColor(thermalColor)
                 }
@@ -131,7 +142,7 @@ private struct Header: View {
                 Text(String(format: "%.1f W", model.totalPower))
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
-                Text("total power")
+                Text(L10n.string("dashboard.totalPower"))
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -162,19 +173,19 @@ private struct CPUSection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
         SectionBox(icon: "cpu", title: "CPU") {
-            Row(label: "Overall") { StatBar(pct: model.cpuUsage) }
+            Row(label: L10n.string("cpu.overall")) { StatBar(pct: model.cpuUsage) }
             if model.eCoreCount > 0 {
-                Row(label: "E-core  \(model.eCoresMHz) MHz") {
+                Row(label: "\(L10n.string("cpu.efficiencyCore"))  \(model.eCoresMHz) MHz") {
                     StatBar(pct: model.eCoresPct, color: Palette.cyan)
                 }
             }
             if model.pCoreCount > 0 {
-                Row(label: "P-core  \(model.pCoresMHz) MHz") {
+                Row(label: "\(L10n.string("cpu.performanceCore"))  \(model.pCoresMHz) MHz") {
                     StatBar(pct: model.pCoresPct, color: Palette.purple)
                 }
             }
             if model.sCoreCount > 0 {
-                Row(label: "S-core  \(model.sClusterMHz) MHz") {
+                Row(label: "\(L10n.string("cpu.superPerformanceCore"))  \(model.sClusterMHz) MHz") {
                     StatBar(pct: model.sClusterPct, color: Palette.coral)
                 }
             }
@@ -243,8 +254,8 @@ private struct CPUSection: View {
 private struct FanSection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
-        SectionBox(icon: "fan", title: "Fan") {
-            Row(label: "Speed") {
+        SectionBox(icon: "fan", title: L10n.string("fan.title")) {
+            Row(label: L10n.string("fan.speed")) {
                 HStack {
                     Text("\(model.fanRPM) RPM")
                         .font(.system(size: 12, design: .monospaced))
@@ -261,7 +272,10 @@ private struct FanSection: View {
 private struct GPUSection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
-        SectionBox(icon: "rectangle.3.group", title: "GPU  ·  \(model.gpuCoreCount) cores") {
+        SectionBox(
+            icon: "rectangle.3.group",
+            title: L10n.format("gpu.title", model.gpuCoreCount)
+        ) {
             Row(label: "\(model.gpuMHz) MHz") {
                 StatBar(pct: model.gpuUsage, color: Palette.orange)
             }
@@ -282,14 +296,16 @@ private struct GPUSection: View {
 private struct MemorySection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
-        SectionBox(icon: "memorychip", title: "Memory") {
+        SectionBox(icon: "memorychip", title: L10n.string("memory.title")) {
             Row(label: "\(fmtB(model.memUsed)) / \(fmtB(model.memTotal))") {
                 StatBar(pct: model.memPct, color: Palette.blue)
             }
             HStack(spacing: 16) {
-                KV("DRAM BW",  String(format: "%.1f GB/s", model.dramBW))
-                KV("Swap", model.swapTotal > 0
-                    ? "\(fmtB(model.swapUsed)) / \(fmtB(model.swapTotal))" : "None")
+                KV(L10n.string("memory.dramBandwidth"),
+                   String(format: "%.1f GB/s", model.dramBW))
+                KV(L10n.string("memory.swap"), model.swapTotal > 0
+                    ? "\(fmtB(model.swapUsed)) / \(fmtB(model.swapTotal))"
+                    : L10n.string("common.none"))
             }
             .padding(.top, 2)
         }
@@ -302,9 +318,9 @@ private struct BatterySection: View {
     @ObservedObject var model: SystemStatsModel
 
     var statusLabel: String {
-        if model.batteryCharged  { return "Fully Charged" }
-        if model.batteryCharging { return "Charging" }
-        return "On Battery"
+        if model.batteryCharged  { return L10n.string("battery.fullyCharged") }
+        if model.batteryCharging { return L10n.string("battery.charging") }
+        return L10n.string("battery.onBattery")
     }
 
     var batteryColor: Color {
@@ -314,30 +330,31 @@ private struct BatterySection: View {
     }
 
     var body: some View {
-        SectionBox(icon: "battery.75percent", title: "Battery") {
+        SectionBox(icon: "battery.75percent", title: L10n.string("battery.title")) {
             Row(label: statusLabel) {
                 StatBar(pct: model.batteryPct, color: batteryColor)
             }
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
                 GridRow {
-                    KV("Source",     model.batteryOnAC ? "AC Power" : "Battery")
-                    KV("Remaining",  model.batteryTimeLeft)
+                    KV(L10n.string("battery.source"),
+                       model.batteryOnAC ? L10n.string("battery.acPower") : L10n.string("battery.battery"))
+                    KV(L10n.string("battery.remaining"), model.batteryTimeLeft)
                 }
                 GridRow {
-                    KV("Adapter",    model.adapterWatts > 0
+                    KV(L10n.string("battery.adapter"), model.adapterWatts > 0
                         ? String(format: "%.0f W", model.adapterWatts) : "—")
-                    KV("Charge rate",model.chargingWatts > 0
+                    KV(L10n.string("battery.chargeRate"), model.chargingWatts > 0
                         ? String(format: "%.1f W", model.chargingWatts) : "—")
                 }
                 GridRow {
-                    KV("Temp",       model.batteryTempC > 0
+                    KV(L10n.string("battery.temp"), model.batteryTempC > 0
                         ? String(format: "%.1f °C", model.batteryTempC) : "—")
-                    KV("Cycles",     model.batteryCycles > 0
+                    KV(L10n.string("battery.cycles"), model.batteryCycles > 0
                         ? "\(model.batteryCycles)" : "—")
                 }
                 GridRow {
-                    KV("Health",     "\(model.batteryHealthPct)%")
-                    KV("Capacity",   model.batteryMaxMAh > 0
+                    KV(L10n.string("battery.health"), "\(model.batteryHealthPct)%")
+                    KV(L10n.string("battery.capacity"), model.batteryMaxMAh > 0
                         ? "\(model.batteryMaxMAh) / \(model.batteryDesignMAh) mAh" : "—")
                 }
             }
@@ -352,12 +369,12 @@ private struct NetworkDiskSection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
         HStack(spacing: 0) {
-            SectionBox(icon: "wifi", title: "Network") {
+            SectionBox(icon: "wifi", title: L10n.string("network.title")) {
                 IORow(icon: "arrow.down", val: fmtB(model.netInBps)  + "/s", color: Palette.green)
                 IORow(icon: "arrow.up",   val: fmtB(model.netOutBps) + "/s", color: Palette.orange)
             }
             Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1)
-            SectionBox(icon: "internaldrive", title: "Disk I/O") {
+            SectionBox(icon: "internaldrive", title: L10n.string("disk.title")) {
                 IORow(icon: "arrow.down", val: String(format: "%.0f KB/s", model.diskReadKBs),  color: Palette.cyan)
                 IORow(icon: "arrow.up",   val: String(format: "%.0f KB/s", model.diskWriteKBs), color: Palette.orange)
             }
@@ -383,14 +400,14 @@ private struct IORow: View {
 private struct PowerSection: View {
     @ObservedObject var model: SystemStatsModel
     var body: some View {
-        SectionBox(icon: "bolt.fill", title: "Power Rails") {
+        SectionBox(icon: "bolt.fill", title: L10n.string("power.title")) {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 5) {
-                PowerTile(label: "CPU",   val: model.cpuPower)
-                PowerTile(label: "GPU",   val: model.gpuPower)
-                PowerTile(label: "ANE",   val: model.anePower)
-                PowerTile(label: "DRAM",  val: model.dramPower)
-                PowerTile(label: "SYS",   val: model.sysPower)
-                PowerTile(label: "TOTAL", val: model.totalPower, highlight: true)
+                PowerTile(label: L10n.string("power.cpu"),   val: model.cpuPower)
+                PowerTile(label: L10n.string("power.gpu"),   val: model.gpuPower)
+                PowerTile(label: L10n.string("power.ane"),   val: model.anePower)
+                PowerTile(label: L10n.string("power.dram"),  val: model.dramPower)
+                PowerTile(label: L10n.string("power.sys"),   val: model.sysPower)
+                PowerTile(label: L10n.string("power.total"), val: model.totalPower, highlight: true)
             }
         }
     }
@@ -418,37 +435,48 @@ private struct PowerTile: View {
 
 private struct ProcessSection: View {
     @ObservedObject var model: SystemStatsModel
+    @Environment(\.locale) private var locale
     @State private var mode: ProcessMode = .cpu
 
     private enum ProcessMode: String, CaseIterable, Identifiable {
-        case cpu = "CPU"
-        case disk = "Disk"
-        case network = "Network"
+        case cpu
+        case disk
+        case network
+
         var id: Self { self }
+
+        var titleKey: String {
+            switch self {
+            case .cpu: return "metric.cpu"
+            case .disk: return "process.disk"
+            case .network: return "process.network"
+            }
+        }
     }
 
     var body: some View {
-        SectionBox(icon: "list.bullet", title: "Top Processes") {
-            Picker("Process metric", selection: $mode) {
+        SectionBox(icon: "list.bullet", title: L10n.string("process.title")) {
+            Picker(L10n.string("process.metric"), selection: $mode) {
                 ForEach(ProcessMode.allCases) { metric in
-                    Text(metric.rawValue).tag(metric)
+                    Text(L10n.string(metric.titleKey)).tag(metric)
                 }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .id(locale)
 
             switch mode {
             case .cpu:
                 cpuRows
             case .disk:
                 ioRows(
-                    header: ("Read", "Write"),
+                    header: (L10n.string("process.read"), L10n.string("process.write")),
                     rows: model.topDiskProcs.map { ($0.id, $0.name, fmtB($0.readBps) + "/s", fmtB($0.writeBps) + "/s") },
                     colors: (Color(hex: "64D2FF"), Color(hex: "FF9F0A"))
                 )
             case .network:
                 ioRows(
-                    header: ("Down", "Up"),
+                    header: (L10n.string("process.down"), L10n.string("process.up")),
                     rows: model.topNetworkProcs.map { ($0.id, $0.name, fmtB($0.downBps) + "/s", fmtB($0.upBps) + "/s") },
                     colors: (Color(hex: "30D158"), Color(hex: "BF5AF2"))
                 )
@@ -459,9 +487,9 @@ private struct ProcessSection: View {
     private var cpuRows: some View {
         Group {
             HStack {
-                Text("Process").frame(maxWidth: .infinity, alignment: .leading)
-                Text("CPU").frame(width: 40, alignment: .trailing)
-                Text("Memory").frame(width: 64, alignment: .trailing)
+                Text(L10n.string("process.process")).frame(maxWidth: .infinity, alignment: .leading)
+                Text(L10n.string("metric.cpu")).frame(width: 40, alignment: .trailing)
+                Text(L10n.string("process.memory")).frame(width: 64, alignment: .trailing)
             }
             .font(.system(size: 9)).foregroundColor(.secondary)
 
@@ -491,14 +519,14 @@ private struct ProcessSection: View {
         colors: (Color, Color)
     ) -> some View {
         HStack {
-            Text("Process").frame(maxWidth: .infinity, alignment: .leading)
+            Text(L10n.string("process.process")).frame(maxWidth: .infinity, alignment: .leading)
             Text(header.0).frame(width: 70, alignment: .trailing)
             Text(header.1).frame(width: 70, alignment: .trailing)
         }
         .font(.system(size: 9)).foregroundColor(.secondary)
 
         if rows.isEmpty {
-            Text("Collecting activity…")
+            Text(L10n.string("process.collecting"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -541,14 +569,17 @@ private struct FooterBar: View {
                     DispatchQueue.main.async { working = false }
                 }
             } label: {
-                Label(working ? "Working…" : "Optimize", systemImage: "bolt.fill")
+                Label(
+                    working ? L10n.string("footer.working") : L10n.string("footer.optimize"),
+                    systemImage: "bolt.fill"
+                )
                     .frame(maxWidth: .infinity)
                     .font(.system(size: 12, weight: .medium))
             }
             .buttonStyle(.borderedProminent).tint(Palette.orange).disabled(working)
 
             Button { NSApp.terminate(nil) } label: {
-                Text("Quit").frame(maxWidth: .infinity)
+                Text(L10n.string("footer.quit")).frame(maxWidth: .infinity)
                     .font(.system(size: 12, weight: .medium))
             }
             .buttonStyle(.bordered)
@@ -564,61 +595,93 @@ struct SettingsSheet: View {
     @AppStorage("openAtLogin")   var openAtLogin   = false
     @AppStorage("cpuOnlyMenuBar") var cpuOnlyMenuBar = false
     @AppStorage("appTheme") private var appTheme = AppTheme.automatic.rawValue
+    @ObservedObject private var languageStore = LanguageStore.shared
     @ObservedObject private var updater = UpdateChecker.shared
     @State private var menuMetrics = MenuBarLayoutStore.orderedMetrics()
+
+    private var languageBinding: Binding<AppLanguage> {
+        Binding(
+            get: { languageStore.selection },
+            set: { languageStore.select($0) }
+        )
+    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Settings")
+            Text(L10n.string("settings.title"))
                 .font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
 
             VStack(alignment: .leading, spacing: 6) {
-                Toggle("CPU Percentage Only", isOn: $cpuOnlyMenuBar)
-                    .toggleStyle(SwitchToggleStyle(tint: Palette.green))
-                Text("Show a compact value such as 12% in the menu bar.")
+                Text(L10n.string("settings.language"))
+                    .font(.system(size: 12, weight: .medium))
+                Picker("", selection: languageBinding) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(L10n.string(language.titleKey)).tag(language)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .id(languageStore.selection)
+                Text(L10n.string("app.language.description"))
                     .font(.system(size: 11)).foregroundColor(.secondary)
             }
 
-            DisclosureGroup("Menu Bar Metrics") {
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle(isOn: $cpuOnlyMenuBar) {
+                    Text(L10n.string("settings.cpuOnly"))
+                }
+                    .toggleStyle(SwitchToggleStyle(tint: Palette.green))
+                Text(L10n.string("settings.cpuOnly.description"))
+                    .font(.system(size: 11)).foregroundColor(.secondary)
+            }
+
+            DisclosureGroup {
                 VStack(spacing: 8) {
                     ForEach(menuMetrics) { metric in
                         MenuBarMetricRow(metric: metric, metrics: $menuMetrics)
                     }
                     HStack {
-                        Text("At least one metric remains enabled.")
+                        Text(L10n.string("settings.menuBarMetrics.minimum"))
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
                         Spacer()
-                        Button("Reset") {
+                        Button {
                             MenuBarLayoutStore.reset()
                             menuMetrics = MenuBarLayoutStore.orderedMetrics()
+                        } label: {
+                            Text(L10n.string("settings.reset"))
                         }
                         .font(.system(size: 10))
                     }
                 }
                 .padding(.top, 8)
+            } label: {
+                Text(L10n.string("settings.menuBarMetrics"))
             }
             .font(.system(size: 12, weight: .medium))
             .disabled(cpuOnlyMenuBar)
             .opacity(cpuOnlyMenuBar ? 0.55 : 1)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Appearance")
+                Text(L10n.string("settings.appearance"))
                     .font(.system(size: 12, weight: .medium))
-                Picker("Appearance", selection: $appTheme) {
+                Picker(L10n.string("settings.appearance"), selection: $appTheme) {
                     ForEach(AppTheme.allCases) { theme in
                         Text(theme.label).tag(theme.rawValue)
                     }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
-                Text("Automatic follows your Mac’s current appearance.")
+                .id(languageStore.resolvedLanguage)
+                Text(L10n.string("settings.appearance.description"))
                     .font(.system(size: 11)).foregroundColor(.secondary)
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Toggle("Open at Login", isOn: $openAtLogin)
+                Toggle(isOn: $openAtLogin) {
+                    Text(L10n.string("settings.openAtLogin"))
+                }
                     .toggleStyle(SwitchToggleStyle(tint: Palette.green))
                     .onChange(of: openAtLogin) { enabled in
                         if enabled {
@@ -627,23 +690,24 @@ struct SettingsSheet: View {
                             try? SMAppService.mainApp.unregister()
                         }
                     }
-                Text("Automatically start MacMonitor when you log in.")
+                Text(L10n.string("settings.login.description"))
                     .font(.system(size: 11)).foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("Desktop Widget")
+                    Text(L10n.string("settings.desktopWidget"))
                         .font(.system(size: 12, weight: .medium))
                     Spacer()
-                    Button("Refresh Now") {
+                    Button {
                         WidgetCenter.shared.reloadAllTimelines()
+                    } label: {
+                        Text(L10n.string("settings.refreshNow"))
                     }
                     .font(.system(size: 11))
                 }
-                Text("Right-click your desktop → Edit Widgets → find MacMonitor. "
-                     + "It refreshes on its own while MacMonitor is running.")
+                Text(L10n.string("settings.widget.description"))
                     .font(.system(size: 11)).foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -658,23 +722,23 @@ struct SettingsSheet: View {
                         switch updater.updatePhase {
                         case .idle:
                             if updater.updateAvailable {
-                                Text("v\(updater.latestVersion) available")
+                                Text(L10n.format("settings.version.available", updater.latestVersion))
                                     .foregroundColor(Palette.orange)
                             } else {
                                 Text("Apple Silicon  ·  macOS 13+  ·  MIT")
                                     .foregroundColor(.secondary)
                             }
                         case .downloading:
-                            Text("Downloading v\(updater.latestVersion)…")
+                            Text(L10n.format("update.downloading", updater.latestVersion))
                                 .foregroundColor(Palette.orange)
                         case .installing:
-                            Text("Installing…")
+                            Text(L10n.string("update.installing"))
                                 .foregroundColor(Palette.orange)
                         case .readyToRelaunch:
-                            Text("Ready — relaunch to apply")
+                            Text(L10n.string("update.ready"))
                                 .foregroundColor(Palette.green)
-                        case .failed(let msg):
-                            Text(msg)
+                        case .failed(let failure):
+                            Text(L10n.string(failure.titleKey))
                                 .foregroundColor(Palette.red)
                         }
                     }
@@ -686,12 +750,20 @@ struct SettingsSheet: View {
                     case .idle:
                         HStack(spacing: 6) {
                             if updater.updateAvailable {
-                                Button("Update") { updater.startUpdate() }
+                                Button {
+                                    updater.startUpdate()
+                                } label: {
+                                    Text(L10n.string("settings.update"))
+                                }
                                     .buttonStyle(.borderedProminent)
                                     .tint(Palette.orange)
                                     .font(.system(size: 12, weight: .semibold))
                             }
-                            Button("Done") { isPresented = false }
+                            Button {
+                                isPresented = false
+                            } label: {
+                                Text(L10n.string("settings.done"))
+                            }
                                 .buttonStyle(.borderedProminent)
                                 .tint(Palette.blue)
                         }
@@ -710,12 +782,20 @@ struct SettingsSheet: View {
                             .scaleEffect(0.75)
                             .tint(Palette.orange)
                     case .readyToRelaunch:
-                        Button("Relaunch") { updater.relaunch() }
+                        Button {
+                            updater.relaunch()
+                        } label: {
+                            Text(L10n.string("settings.relaunch"))
+                        }
                             .buttonStyle(.borderedProminent)
                             .tint(Palette.green)
                             .font(.system(size: 12, weight: .semibold))
                     case .failed:
-                        Button("Dismiss") { updater.dismissUpdateError() }
+                        Button {
+                            updater.dismissUpdateError()
+                        } label: {
+                            Text(L10n.string("settings.dismiss"))
+                        }
                             .buttonStyle(.bordered)
                             .font(.system(size: 12))
                     }

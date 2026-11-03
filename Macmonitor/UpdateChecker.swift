@@ -4,6 +4,20 @@ import Combine
 
 // Copyright (c) 2025-2026 MacMonitor Contributors. MIT License.
 
+enum UpdateFailure: String, Equatable {
+    case download
+    case save
+    case mount
+    case mountPoint
+    case appMissing
+    case installer
+    case cancelled
+
+    var titleKey: String {
+        "update.error.\(rawValue)"
+    }
+}
+
 /// Checks GitHub Releases for a newer version and publishes the result.
 /// Singleton — call `UpdateChecker.shared.check()` once at launch.
 final class UpdateChecker: ObservableObject {
@@ -24,7 +38,7 @@ final class UpdateChecker: ObservableObject {
         case downloading
         case installing
         case readyToRelaunch
-        case failed(String)
+        case failed(UpdateFailure)
     }
 
     private var progressObs: NSKeyValueObservation?
@@ -68,15 +82,15 @@ final class UpdateChecker: ObservableObject {
 
         let task = URLSession.shared.downloadTask(with: url) { [weak self] tmpURL, _, error in
             guard let self else { return }
-            if let error {
-                self.fail(error.localizedDescription); return
+            if error != nil {
+                self.fail(.download); return
             }
-            guard let tmpURL else { self.fail("Download failed"); return }
+            guard let tmpURL else { self.fail(.download); return }
             try? FileManager.default.removeItem(at: dest)
             do {
                 try FileManager.default.moveItem(at: tmpURL, to: dest)
             } catch {
-                self.fail("Could not save download"); return
+                self.fail(.save); return
             }
             self.install(dmg: dest)
         }
@@ -115,19 +129,19 @@ final class UpdateChecker: ObservableObject {
         let pipe = Pipe()
         mountTask.standardOutput = pipe
         mountTask.standardError  = Pipe()
-        guard (try? mountTask.launch()) != nil else { fail("Could not mount update"); return }
+        guard (try? mountTask.launch()) != nil else { fail(.mount); return }
         mountTask.waitUntilExit()
 
         let plistData = pipe.fileHandleForReading.readDataToEndOfFile()
         guard let plist     = try? PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any],
               let entities  = plist["system-entities"] as? [[String: Any]],
               let mountPoint = entities.compactMap({ $0["mount-point"] as? String }).first
-        else { fail("Could not read mount point"); return }
+        else { fail(.mountPoint); return }
 
         // Find .app in the DMG
         let contents = (try? FileManager.default.contentsOfDirectory(atPath: mountPoint)) ?? []
         guard let appName = contents.first(where: { $0.hasSuffix(".app") }) else {
-            detach(mountPoint); fail("App not found in update package"); return
+            detach(mountPoint); fail(.appMissing); return
         }
         let srcApp  = (mountPoint as NSString).appendingPathComponent(appName)
         let destApp = "/Applications/MacMonitor.app"
@@ -139,7 +153,7 @@ final class UpdateChecker: ObservableObject {
         p.arguments = ["-e", script]
         p.standardOutput = Pipe(); p.standardError = Pipe()
         guard (try? p.launch()) != nil else {
-            detach(mountPoint); fail("Could not run installer"); return
+            detach(mountPoint); fail(.installer); return
         }
         p.waitUntilExit()
 
@@ -147,7 +161,7 @@ final class UpdateChecker: ObservableObject {
         try? FileManager.default.removeItem(at: dmg)
 
         DispatchQueue.main.async {
-            self.updatePhase = p.terminationStatus == 0 ? .readyToRelaunch : .failed("Install cancelled")
+            self.updatePhase = p.terminationStatus == 0 ? .readyToRelaunch : .failed(.cancelled)
         }
     }
 
@@ -159,8 +173,8 @@ final class UpdateChecker: ObservableObject {
         try? p.launch(); p.waitUntilExit()
     }
 
-    private func fail(_ message: String) {
-        DispatchQueue.main.async { self.updatePhase = .failed(message) }
+    private func fail(_ failure: UpdateFailure) {
+        DispatchQueue.main.async { self.updatePhase = .failed(failure) }
     }
 
     // MARK: - Private

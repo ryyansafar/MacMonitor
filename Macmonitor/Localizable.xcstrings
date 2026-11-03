@@ -1,0 +1,816 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "alert.cancel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } }
+      }
+    },
+    "alert.heavy.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "These apps are using significant RAM:\n\n%@\n\nQuit them?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "以下应用正在使用大量内存：\n\n%@\n\n要退出它们吗？" } }
+      }
+    },
+    "alert.heavy.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Heavy Apps Found" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发现高内存应用" } }
+      }
+    },
+    "alert.healthy.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No heavy user apps found.\nDisk cache has been purged." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未发现占用大量内存的用户应用。\n磁盘缓存已清理。" } }
+      }
+    },
+    "alert.healthy.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "System looks healthy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统状态良好" } }
+      }
+    },
+    "alert.quitAll" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit All" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部退出" } }
+      }
+    },
+    "app.language.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Changes apply immediately." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更改会立即生效。" } }
+      }
+    },
+    "app.language.english" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "English" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "English" } }
+      }
+    },
+    "app.language.simplifiedChinese" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Simplified Chinese" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "简体中文" } }
+      }
+    },
+    "app.language.system" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow System" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "跟随系统" } }
+      }
+    },
+    "appearance.automatic" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动" } }
+      }
+    },
+    "appearance.dark" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dark" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "深色" } }
+      }
+    },
+    "appearance.light" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Light" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浅色" } }
+      }
+    },
+    "battery.acPower" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AC Power" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电源适配器" } }
+      }
+    },
+    "battery.adapter" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Adapter" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "适配器" } }
+      }
+    },
+    "battery.battery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电池" } }
+      }
+    },
+    "battery.capacity" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Capacity" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "容量" } }
+      }
+    },
+    "battery.chargeRate" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Charge rate" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "充电功率" } }
+      }
+    },
+    "battery.charging" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Charging" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "充电中" } }
+      }
+    },
+    "battery.cycles" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cycles" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "循环次数" } }
+      }
+    },
+    "battery.fullyCharged" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fully Charged" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已充满" } }
+      }
+    },
+    "battery.health" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Health" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "健康度" } }
+      }
+    },
+    "battery.onBattery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On Battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用电池" } }
+      }
+    },
+    "battery.remaining" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remaining" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剩余时间" } }
+      }
+    },
+    "battery.source" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Source" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "来源" } }
+      }
+    },
+    "battery.temp" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Temp" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度" } }
+      }
+    },
+    "battery.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电池" } }
+      }
+    },
+    "common.none" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无" } }
+      }
+    },
+    "cpu.efficiencyCore" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "E-core" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "能效核" } }
+      }
+    },
+    "cpu.overall" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Overall" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "总体" } }
+      }
+    },
+    "cpu.performanceCore" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "P-core" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "性能核" } }
+      }
+    },
+    "cpu.superPerformanceCore" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "S-core" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "超性能核" } }
+      }
+    },
+    "dashboard.helper.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Run Install.command from the DMG to enable GPU, temps, and power data." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请从 DMG 运行 Install.command，以启用 GPU、温度和功耗数据。" } }
+      }
+    },
+    "dashboard.helper.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "System helper not installed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统辅助程序未安装" } }
+      }
+    },
+    "dashboard.totalPower" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "total power" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "总功耗" } }
+      }
+    },
+    "disk.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disk I/O" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "磁盘 I/O" } }
+      }
+    },
+    "fan.speed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Speed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转速" } }
+      }
+    },
+    "fan.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fan" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风扇" } }
+      }
+    },
+    "footer.optimize" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optimize" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "优化" } }
+      }
+    },
+    "footer.quit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "退出" } }
+      }
+    },
+    "footer.working" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Working..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "处理中..." } }
+      }
+    },
+    "gpu.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GPU  ·  %d cores" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GPU  ·  %d 核" } }
+      }
+    },
+    "memory.dramBandwidth" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DRAM BW" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DRAM 带宽" } }
+      }
+    },
+    "memory.swap" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Swap" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "交换空间" } }
+      }
+    },
+    "memory.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } }
+      }
+    },
+    "menu.openDashboard" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Dashboard" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开仪表盘" } }
+      }
+    },
+    "menu.quit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit MacMonitor" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "退出 MacMonitor" } }
+      }
+    },
+    "menu.settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置..." } }
+      }
+    },
+    "metric.battery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电池" } }
+      }
+    },
+    "metric.cpu" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } }
+      }
+    },
+    "metric.disk" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disk I/O" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "磁盘 I/O" } }
+      }
+    },
+    "metric.memory" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } }
+      }
+    },
+    "metric.network" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Network" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络" } }
+      }
+    },
+    "metric.power" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Power" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "功耗" } }
+      }
+    },
+    "nav.back" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "返回" } }
+      }
+    },
+    "nav.continue" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "继续" } }
+      }
+    },
+    "nav.getStarted" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get Started" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开始使用" } }
+      }
+    },
+    "network.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Network" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络" } }
+      }
+    },
+    "permission.battery.desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cycle count, health, charge rate, adapter watts." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "循环次数、健康度、充电功率与适配器功率。" } }
+      }
+    },
+    "permission.battery.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "电池" } }
+      }
+    },
+    "permission.cpuMemory.desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Read directly from macOS, no password needed." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "直接从 macOS 读取，无需密码。" } }
+      }
+    },
+    "permission.cpuMemory.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU & Memory" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU 与内存" } }
+      }
+    },
+    "permission.gpuTemps.desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Native SMC + IOReport sensors, no third-party dependencies." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原生 SMC 与 IOReport 传感器，无第三方依赖。" } }
+      }
+    },
+    "permission.gpuTemps.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GPU & Temps" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GPU 与温度" } }
+      }
+    },
+    "permission.power.desc" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ANE, DRAM, GPU SRAM, total system power." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ANE、DRAM、GPU SRAM 与系统总功耗。" } }
+      }
+    },
+    "permission.power.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Power" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "功耗" } }
+      }
+    },
+    "permission.privacy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your sudo password is cached by macOS. MacMonitor never stores it." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "sudo 密码由 macOS 缓存，MacMonitor 不会存储。" } }
+      }
+    },
+    "permission.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor needs sudo once to read GPU, temperature, and power data." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor 需要一次 sudo 权限来读取 GPU、温度和功耗数据。" } }
+      }
+    },
+    "permission.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "One-time permission" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "一次性权限" } }
+      }
+    },
+    "power.ane" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ANE" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "ANE" } }
+      }
+    },
+    "power.cpu" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU" } }
+      }
+    },
+    "power.dram" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "DRAM" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "DRAM" } }
+      }
+    },
+    "power.gpu" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GPU" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GPU" } }
+      }
+    },
+    "power.sys" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SYS" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "系统" } }
+      }
+    },
+    "power.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Power Rails" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "功耗" } }
+      }
+    },
+    "power.total" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "TOTAL" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "总计" } }
+      }
+    },
+    "process.collecting" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Collecting activity..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在收集活动..." } }
+      }
+    },
+    "process.disk" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disk" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "磁盘" } }
+      }
+    },
+    "process.down" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Down" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载" } }
+      }
+    },
+    "process.memory" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内存" } }
+      }
+    },
+    "process.metric" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Process metric" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程指标" } }
+      }
+    },
+    "process.network" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Network" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "网络" } }
+      }
+    },
+    "process.process" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Process" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程" } }
+      }
+    },
+    "process.read" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Read" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "读取" } }
+      }
+    },
+    "process.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Top Processes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "进程占用" } }
+      }
+    },
+    "process.up" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Up" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上传" } }
+      }
+    },
+    "process.write" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Write" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "写入" } }
+      }
+    },
+    "settings.appearance" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Appearance" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "外观" } }
+      }
+    },
+    "settings.appearance.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic follows your Mac's current appearance." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动模式跟随 Mac 当前外观。" } }
+      }
+    },
+    "settings.cpuOnly" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU Percentage Only" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅显示 CPU 百分比" } }
+      }
+    },
+    "settings.cpuOnly.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show a compact value such as 12% in the menu bar." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在菜单栏中显示 12% 这样的紧凑数值。" } }
+      }
+    },
+    "settings.desktopWidget" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Desktop Widget" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桌面小组件" } }
+      }
+    },
+    "settings.dismiss" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dismiss" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭" } }
+      }
+    },
+    "settings.done" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成" } }
+      }
+    },
+    "settings.language" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "语言" } }
+      }
+    },
+    "settings.login.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatically start MacMonitor when you log in." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录 Mac 时自动启动 MacMonitor。" } }
+      }
+    },
+    "settings.menuBarMetrics" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Menu Bar Metrics" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "菜单栏指标" } }
+      }
+    },
+    "settings.menuBarMetrics.minimum" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "At least one metric remains enabled." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "至少保留一个指标。" } }
+      }
+    },
+    "settings.openAtLogin" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open at Login" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录时打开" } }
+      }
+    },
+    "settings.refreshNow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh Now" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "立即刷新" } }
+      }
+    },
+    "settings.relaunch" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Relaunch" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新启动" } }
+      }
+    },
+    "settings.reset" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重置" } }
+      }
+    },
+    "settings.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } }
+      }
+    },
+    "settings.update" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新" } }
+      }
+    },
+    "settings.version.available" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "v%@ available" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "v%@ 可用" } }
+      }
+    },
+    "settings.widget.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Right-click your desktop, choose Edit Widgets, then find MacMonitor. It refreshes on its own while MacMonitor is running." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右键点按桌面，选择“编辑小组件”，然后找到 MacMonitor。MacMonitor 运行时，它会自动刷新。" } }
+      }
+    },
+    "setup.menuBar.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Live indicator in your menu bar. Click to open the full dashboard." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在菜单栏中显示实时状态，点按可打开完整仪表盘。" } }
+      }
+    },
+    "setup.menuBar.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Menu Bar" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "菜单栏" } }
+      }
+    },
+    "setup.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can change this anytime in Settings." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可随时在设置中更改。" } }
+      }
+    },
+    "setup.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose your setup" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择使用方式" } }
+      }
+    },
+    "setup.widget.description" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Small or medium widget on your desktop or Notification Centre." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在桌面或通知中心使用小型或中型小组件。" } }
+      }
+    },
+    "setup.widget.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Desktop Widget" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "桌面小组件" } }
+      }
+    },
+    "status.cpuOnly.tooltip" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CPU usage: %d%%" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CPU 使用率：%d%%" } }
+      }
+    },
+    "status.tooltip" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor - CPU %d%%, Memory %d%%" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor - CPU %d%%，内存 %d%%" } }
+      }
+    },
+    "thermal.critical" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Critical" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "危急" } }
+      }
+    },
+    "thermal.fair" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fair" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "偏高" } }
+      }
+    },
+    "thermal.normal" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Normal" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正常" } }
+      }
+    },
+    "thermal.serious" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Serious" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "严重" } }
+      }
+    },
+    "update.downloading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloading v%@..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在下载 v%@..." } }
+      }
+    },
+    "update.error.appMissing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App not found in update package" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新包中未找到应用" } }
+      }
+    },
+    "update.error.cancelled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Install cancelled" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装已取消" } }
+      }
+    },
+    "update.error.download" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Download failed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下载失败" } }
+      }
+    },
+    "update.error.installer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not run installer" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法运行安装程序" } }
+      }
+    },
+    "update.error.mount" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not mount update" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法挂载更新" } }
+      }
+    },
+    "update.error.mountPoint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not read mount point" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法读取挂载点" } }
+      }
+    },
+    "update.error.save" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not save download" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法保存下载文件" } }
+      }
+    },
+    "update.installing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Installing..." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在安装..." } }
+      }
+    },
+    "update.ready" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready - relaunch to apply" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安装完成，重新启动后生效" } }
+      }
+    },
+    "welcome.feature.battery" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full battery" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完整电池信息" } }
+      }
+    },
+    "welcome.feature.gpuTemps" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GPU + temps" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GPU 与温度" } }
+      }
+    },
+    "welcome.feature.perCore" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Per-core CPU" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "逐核 CPU" } }
+      }
+    },
+    "welcome.feature.power" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Power rails" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "功耗分布" } }
+      }
+    },
+    "welcome.subtitle" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Real-time CPU, GPU, memory, battery and power monitoring built for Apple Silicon." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为 Apple Silicon 打造的实时 CPU、GPU、内存、电池与功耗监控。" } }
+      }
+    },
+    "welcome.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to MacMonitor" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "欢迎使用 MacMonitor" } }
+      }
+    },
+    "window.settings.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor Settings" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "MacMonitor 设置" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

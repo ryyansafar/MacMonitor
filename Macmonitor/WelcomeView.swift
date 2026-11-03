@@ -43,17 +43,23 @@ struct WelcomeView: View {
                 // Navigation
                 HStack(spacing: 12) {
                     if step > 0 {
-                        Button("Back") { withAnimation { step -= 1 } }
+                        Button {
+                            withAnimation { step -= 1 }
+                        } label: {
+                            Text(L10n.string("nav.back"))
+                        }
                             .buttonStyle(.bordered)
                     }
                     Spacer()
-                    Button(step < 2 ? "Continue" : "Get Started") {
+                    Button {
                         if step < 2 {
                             withAnimation { step += 1 }
                         } else {
                             hasLaunched = true
                             NSApp.keyWindow?.close()
                         }
+                    } label: {
+                        Text(L10n.string(step < 2 ? "nav.continue" : "nav.getStarted"))
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Palette.blue)
@@ -81,10 +87,10 @@ private struct StepWelcome: View {
                 )
 
             VStack(spacing: 8) {
-                Text("Welcome to MacMonitor")
+                Text(L10n.string("welcome.title"))
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.primary)
-                Text("Real-time CPU, GPU, memory, battery and power\nmonitoring built for Apple Silicon.")
+                Text(L10n.string("welcome.subtitle"))
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -92,10 +98,10 @@ private struct StepWelcome: View {
             }
 
             HStack(spacing: 24) {
-                Feature(icon: "cpu",              label: "Per-core CPU")
-                Feature(icon: "rectangle.3.group",label: "GPU + temps")
-                Feature(icon: "battery.75percent",label: "Full battery")
-                Feature(icon: "bolt.fill",        label: "Power rails")
+                Feature(icon: "cpu",              label: L10n.string("welcome.feature.perCore"))
+                Feature(icon: "rectangle.3.group",label: L10n.string("welcome.feature.gpuTemps"))
+                Feature(icon: "battery.75percent",label: L10n.string("welcome.feature.battery"))
+                Feature(icon: "bolt.fill",        label: L10n.string("welcome.feature.power"))
             }
         }
         .padding(.horizontal, 40)
@@ -111,23 +117,23 @@ private struct StepMode: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 6) {
-                Text("Choose your setup")
+                Text(L10n.string("setup.title"))
                     .font(.system(size: 20, weight: .bold)).foregroundColor(.primary)
-                Text("You can change this anytime in Settings.")
+                Text(L10n.string("setup.subtitle"))
                     .font(.system(size: 12)).foregroundColor(.secondary)
             }
 
             VStack(spacing: 12) {
                 ModeCard(
                     icon: "menubar.rectangle",
-                    title: "Menu Bar",
-                    desc: "Live indicator in your menu bar. Click to open the full dashboard.",
+                    title: L10n.string("setup.menuBar.title"),
+                    desc: L10n.string("setup.menuBar.description"),
                     selected: $menuBar
                 )
                 ModeCard(
                     icon: "square.grid.2x2",
-                    title: "Desktop Widget",
-                    desc: "Small or medium widget on your desktop or Notification Centre.",
+                    title: L10n.string("setup.widget.title"),
+                    desc: L10n.string("setup.widget.description"),
                     selected: $widget
                 )
             }
@@ -142,26 +148,30 @@ private struct StepPermission: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 6) {
-                Text("One-time permission")
+                Text(L10n.string("permission.title"))
                     .font(.system(size: 20, weight: .bold)).foregroundColor(.primary)
-                Text("MacMonitor needs sudo once to read GPU, temperature, and power data.")
+                Text(L10n.string("permission.subtitle"))
                     .font(.system(size: 12)).foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 PermRow(icon: "cpu",              color: Palette.blue,
-                        title: "CPU & Memory",    desc: "Read directly from macOS — no password needed.")
+                        title: L10n.string("permission.cpuMemory.title"),
+                        desc: L10n.string("permission.cpuMemory.desc"))
                 PermRow(icon: "rectangle.3.group",color: Palette.purple,
-                        title: "GPU & Temps",     desc: "Native SMC + IOReport sensors — no third-party dependencies.")
+                        title: L10n.string("permission.gpuTemps.title"),
+                        desc: L10n.string("permission.gpuTemps.desc"))
                 PermRow(icon: "bolt.fill",        color: Palette.yellow,
-                        title: "Power rails",     desc: "ANE, DRAM, GPU SRAM, total system power.")
+                        title: L10n.string("permission.power.title"),
+                        desc: L10n.string("permission.power.desc"))
                 PermRow(icon: "battery.75percent",color: Palette.green,
-                        title: "Battery",         desc: "Cycle count, health, charge rate, adapter watts.")
+                        title: L10n.string("permission.battery.title"),
+                        desc: L10n.string("permission.battery.desc"))
             }
             .padding(.horizontal, 36)
 
-            Text("Your sudo password is cached by macOS — MacMonitor never stores it.")
+            Text(L10n.string("permission.privacy"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
