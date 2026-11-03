@@ -20,6 +20,22 @@ enum CPUCoreKind {
     case superPerformance
 }
 
+enum ThermalLevel: String {
+    case normal
+    case fair
+    case serious
+    case critical
+
+    var titleKey: String {
+        switch self {
+        case .normal: return "thermal.normal"
+        case .fair: return "thermal.fair"
+        case .serious: return "thermal.serious"
+        case .critical: return "thermal.critical"
+        }
+    }
+}
+
 private struct CPUCoreTopology {
     let efficiencyCount: Int
     let performanceCount: Int
@@ -96,7 +112,7 @@ class SystemStatsModel: ObservableObject {
     @Published var chargingWatts:    Double  = 0
 
     // System info
-    @Published var thermalState: String = "Normal"
+    @Published var thermalState: ThermalLevel = .normal
     @Published var chipName:     String = "Apple Silicon"  // e.g. "M2", "M2 Pro", "M2 Max"
     @Published var eCoreCount:   Int    = 0
     @Published var pCoreCount:   Int    = 0
@@ -864,17 +880,17 @@ class SystemStatsModel: ObservableObject {
         DispatchQueue.main.async {
             guard !candidates.isEmpty else {
                 let a = NSAlert()
-                a.messageText = "System looks healthy"
-                a.informativeText = "No heavy user apps found.\nDisk cache has been purged."
+                a.messageText = L10n.string("alert.healthy.title")
+                a.informativeText = L10n.string("alert.healthy.message")
                 a.runModal(); return
             }
             let names = candidates.map { "\($0.app.localizedName ?? "?")  (\($0.memMB) MB)" }
                                   .joined(separator: "\n")
             let alert = NSAlert()
-            alert.messageText = "Heavy Apps Found"
-            alert.informativeText = "These apps are using significant RAM:\n\n\(names)\n\nQuit them?"
-            alert.addButton(withTitle: "Quit All")
-            alert.addButton(withTitle: "Cancel")
+            alert.messageText = L10n.string("alert.heavy.title")
+            alert.informativeText = L10n.format("alert.heavy.message", names)
+            alert.addButton(withTitle: L10n.string("alert.quitAll"))
+            alert.addButton(withTitle: L10n.string("alert.cancel"))
             alert.alertStyle = .warning
             if alert.runModal() == .alertFirstButtonReturn {
                 candidates.forEach { $0.app.terminate() }
@@ -934,13 +950,13 @@ private extension Array {
 }
 
 private extension SystemStatsModel {
-    static func currentThermalState() -> String {
+    static func currentThermalState() -> ThermalLevel {
         switch ProcessInfo.processInfo.thermalState {
-        case .nominal: return "Normal"
-        case .fair: return "Fair"
-        case .serious: return "Serious"
-        case .critical: return "Critical"
-        @unknown default: return "Normal"
+        case .nominal: return .normal
+        case .fair: return .fair
+        case .serious: return .serious
+        case .critical: return .critical
+        @unknown default: return .normal
         }
     }
 
