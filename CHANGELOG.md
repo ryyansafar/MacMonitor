@@ -40,6 +40,11 @@ Dates: ISO 8601 (YYYY-MM-DD)
   disk I/O, power, and battery readings while preserving the existing detailed
   indicator as the default.
 
+- **Bilingual interface** — pick Follow System, Simplified Chinese or English in Settings;
+  the dashboard, settings, onboarding, menu, tooltips, alerts and update messages switch
+  immediately. The desktop widget is not localized yet.
+  ([#34](https://github.com/ryyansafar/MacMonitor/pull/34))
+
 ### Data
 
 - Added M3 Pro (Mac15,7, macOS 26.6.2) sensor scan output to `sensor-research/`.

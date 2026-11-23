@@ -89,6 +89,8 @@ Updates every 2 seconds. One glance tells you if everything is fine.
 
 Settings can also reduce the indicator to a compact CPU-only percentage such as `12%`.
 
+The interface is available in English and Simplified Chinese, and follows your system language by default (change it in Settings).
+
 You can also choose and reorder which readings appear (CPU, memory, network, disk I/O, power, battery) from Settings, and the Top Processes section can switch between CPU/memory, disk read/write and network download/upload rankings.
 
 ```
