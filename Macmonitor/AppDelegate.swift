@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
     var welcomeWin: NSWindow?
     var settingsWin: NSWindow?
     let model      = SystemStatsModel()
+    private let languageStore = LanguageStore.shared
 
     // Anchor tracking for the popover — see beginTrackingAnchor(_:).
     private var anchorObservers: [NSObjectProtocol] = []
@@ -29,9 +30,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         NSApp.setActivationPolicy(.accessory)
         UserDefaults.standard.register(defaults: [
             "cpuOnlyMenuBar": false,
-            "appTheme": AppTheme.automatic.rawValue
+            "appTheme": AppTheme.automatic.rawValue,
+            AppLanguage.storageKey: AppLanguage.system.rawValue
         ])
         isCPUOnlyMenuBar = UserDefaults.standard.bool(forKey: "cpuOnlyMenuBar")
+        languageStore.refreshSystemLanguage()
 
         setupMenuBar()
         model.startMonitoring()
@@ -93,6 +96,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
             .sink { [weak self] _ in self?.updateLabel() }
             .store(in: &cancellables)
 
+        languageStore.$resolvedLanguage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.settingsWin?.title = L10n.string("window.settings.title")
+                self?.updateLabel()
+            }
+            .store(in: &cancellables)
+
         // Restore Open at Login state on launch
         if UserDefaults.standard.bool(forKey: "openAtLogin") {
             try? SMAppService.mainApp.register()
@@ -109,6 +120,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 5.0) {
             UpdateChecker.shared.check()
         }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        languageStore.refreshSystemLanguage()
     }
 
     // MARK: - Menu bar
@@ -136,12 +151,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         guard let btn = statusItem?.button else { return }
         if isCPUOnlyMenuBar {
             let title = "\(menuBarSnapshot.cpuUsage)%"
-            let tooltip = "CPU usage: \(menuBarSnapshot.cpuUsage)%"
+            let tooltip = L10n.format("status.cpuOnly.tooltip", menuBarSnapshot.cpuUsage)
             if btn.title != title { btn.title = title }
             if btn.toolTip != tooltip { btn.toolTip = tooltip }
             return
         }
-        let tooltip = "MacMonitor — CPU \(menuBarSnapshot.cpuUsage)%, Memory \(menuBarSnapshot.memoryPercent)%"
+        let tooltip = L10n.format(
+            "status.tooltip",
+            menuBarSnapshot.cpuUsage,
+            menuBarSnapshot.memoryPercent
+        )
         let dot = menuBarSnapshot.cpuUsage >= 85 || menuBarSnapshot.memoryPercent >= 85 ? "🔴"
                 : menuBarSnapshot.cpuUsage >= 60 || menuBarSnapshot.memoryPercent >= 60 ? "🟡" : "🟢"
         let fragments = MenuBarLayoutStore.visibleMetrics().compactMap {
@@ -170,7 +189,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         } else {
             if popover.contentViewController == nil {
                 popover.contentViewController = NSHostingController(
-                    rootView: PopoverView(model: model)
+                    rootView: LocalizationRoot {
+                        PopoverView(model: model)
+                    }
                 )
             }
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
@@ -330,12 +351,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
 
     func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Open Dashboard",
+        menu.addItem(NSMenuItem(title: L10n.string("menu.openDashboard"),
                                 action: #selector(openPopover), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Settings…",
+        menu.addItem(NSMenuItem(title: L10n.string("menu.settings"),
                                 action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit MacMonitor",
+        menu.addItem(NSMenuItem(title: L10n.string("menu.quit"),
                                 action: #selector(NSApp.terminate(_:)), keyEquivalent: "q"))
         statusItem?.menu = menu
         statusItem?.button?.performClick(nil)
@@ -359,7 +380,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         win.titleVisibility             = .hidden
         win.isMovableByWindowBackground = true
         win.backgroundColor             = .windowBackgroundColor
-        win.contentViewController       = NSHostingController(rootView: WelcomeView())
+        win.contentViewController       = NSHostingController(
+            rootView: LocalizationRoot { WelcomeView() }
+        )
         win.center()
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -382,7 +405,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
             backing:      .buffered,
             defer:        false
         )
-        win.title                      = "MacMonitor Settings"
+        win.title                      = L10n.string("window.settings.title")
         win.titlebarAppearsTransparent = true
         // Adaptive so the window tracks the chosen appearance (#14) rather than
         // being pinned to a dark hex value.
@@ -404,7 +427,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSWindowD
         // No preferredColorScheme override — SettingsSheet applies the user's
         // Automatic/Light/Dark choice itself.
         win.contentViewController = NSHostingController(
-            rootView: SettingsSheet(isPresented: dismiss)
+            rootView: LocalizationRoot {
+                SettingsSheet(isPresented: dismiss)
+            }
         )
         win.delegate = self
         win.center()

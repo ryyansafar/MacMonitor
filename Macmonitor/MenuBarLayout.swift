@@ -27,13 +27,17 @@ enum MenuBarMetric: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String {
+        L10n.string(titleKey)
+    }
+
+    private var titleKey: String {
         switch self {
-        case .cpu: return "CPU"
-        case .memory: return "Memory"
-        case .network: return "Network"
-        case .disk: return "Disk I/O"
-        case .power: return "Power"
-        case .battery: return "Battery"
+        case .cpu: return "metric.cpu"
+        case .memory: return "metric.memory"
+        case .network: return "metric.network"
+        case .disk: return "metric.disk"
+        case .power: return "metric.power"
+        case .battery: return "metric.battery"
         }
     }
 
